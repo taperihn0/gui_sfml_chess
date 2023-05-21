@@ -1,8 +1,9 @@
 #include "Piece.h"
+#include "..\Board\Board.h"
 
-Piece::Piece(const sf::Vector2i& pos, const std::string& texture_path, Board* board_ptr,
+Piece::Piece(const std::string& texture_path, Board* board_ptr,
 	const uint16_t& size)
-	: position(pos), board(board_ptr), first_move(true), piece_texture_path(texture_path) {
+	: board(board_ptr), first_move(true), piece_texture_path(texture_path) {
 	PreparePieceTexture(size);
 }
 
@@ -22,20 +23,6 @@ void Piece::PreparePieceTexture(const uint16_t& size) {
 }
 
 
-void Piece::DrawPiece() {
-	board->DrawOnField(piece_sprite, position);
-}
-
-
-//void Piece::ShowPossibleFields() {
-//
-//}
-
-
-void Piece::ChangePosition(const sf::Vector2i& new_pos) {
-	position = new_pos;
-}
-
-sf::Vector2i Piece::GetPosition() {
-	return position;
+void Piece::DrawPiece(sf::Vector2f& window_pos) {
+	board->DrawOnField(piece_sprite, window_pos);
 }

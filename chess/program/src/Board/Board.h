@@ -1,19 +1,22 @@
 #pragma once
 
 #include <SFML\Graphics.hpp>
+#include "..\Pieces\Piece.h"
+#include "..\Pawn\Pawn.h"
 
+//#include <iostream>
 #include <stdexcept>
 #include <array>
 #include <cstdint>
-#include <utility>
 #include <memory>
 
 class Board {
 public:
 	Board(const uint16_t& window_size);
+	void PreparePiecesTemplate();
 	void PrepareBoard();
 
-	void DrawOnField(sf::Sprite& piece_sprite, sf::Vector2i& pos);
+	void DrawOnField(sf::Sprite& piece_sprite, sf::Vector2f& window_pos);
 
 	sf::Sprite GetBoardSprite();
 	uint16_t GetFieldSize();
@@ -27,6 +30,13 @@ public:
 	};
 
 private:
+	void LocatePiece(const uint8_t& row, const uint8_t& col);
+
+	struct Indicator {
+		PieceColor color;
+		PieceType type;
+	};
+
 	sf::RenderTexture render_board;
 	sf::RenderTexture plain_board;
 	const sf::Color light_field, dark_field;
@@ -35,6 +45,7 @@ private:
 	static constexpr uint8_t BOARD_SIZE = 8;
 
 	std::array<std::array<sf::Vector2f, BOARD_SIZE>, BOARD_SIZE> fields_coordinates;
-	std::array<std::array<std::pair<PieceColor, PieceType>, 8>, 8> pieces_distrb;
+	std::array<std::array<Indicator, 8>, 8> pieces_indicator;
+	std::array<std::array<std::unique_ptr<Piece>, 2 + 1>, 12 + 1> pieces_templates;
 };
 
