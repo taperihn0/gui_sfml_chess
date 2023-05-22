@@ -159,17 +159,27 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="program\src\King\King.cpp" />
+    <ClCompile Include="program\src\Knight\Knight.cpp" />
+    <ClCompile Include="program\src\Bishop\Bishop.cpp" />
     <ClCompile Include="program\src\Pawn\Pawn.cpp" />
     <ClCompile Include="program\src\Pieces\Piece.cpp" />
     <ClCompile Include="program\src\Game\Game.cpp" />
     <ClCompile Include="program\src\Board\Board.cpp" />
     <ClCompile Include="program\src\main.cpp" />
+    <ClCompile Include="program\src\Rook\Rook.cpp" />
+    <ClCompile Include="program\src\Queen\Queen.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="program\src\King\King.h" />
+    <ClInclude Include="program\src\Knight\Knight.h" />
+    <ClInclude Include="program\src\Bishop\Bishop.h" />
     <ClInclude Include="program\src\Pawn\Pawn.h" />
     <ClInclude Include="program\src\Pieces\Piece.h" />
     <ClInclude Include="program\src\Game\Game.h" />
     <ClInclude Include="program\src\Board\Board.h" />
+    <ClInclude Include="program\src\Rook\Rook.h" />
+    <ClInclude Include="program\src\Queen\Queen.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
