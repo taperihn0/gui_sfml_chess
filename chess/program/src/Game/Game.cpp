@@ -38,5 +38,5 @@ void Game::CheckEvents(const sf::Event::EventType &type) noexcept {
 
 
 void Game::CheckPressedMouse() {
-	board.FocusField(sf::Mouse::getPosition(window));
+	board.ProcessPressedMouse(sf::Mouse::getPosition(window));
 }

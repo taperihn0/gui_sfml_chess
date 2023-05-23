@@ -17,7 +17,8 @@ public:
 	virtual void DrawPiece(sf::Vector2f& window_pos);
 protected:
 	sf::Sprite piece_sprite;
-	std::vector<sf::Vector2i> active_fields;
+
+	//std::vector<sf::Vector2i> active_fields;
 	
 	Board* const board;
 

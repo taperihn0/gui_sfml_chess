@@ -29,7 +29,7 @@ public:
 	sf::Sprite GetBoardSprite();
 	const uint16_t& GetFieldSize() noexcept;
 
-	void FocusField(const sf::Vector2i &mouse_pos);
+	void ProcessPressedMouse(const sf::Vector2i &mouse_pos);
 
 	enum class PieceType {
 		EMPTY = 0, PAWN, BISHOP, KNIGHT, ROOK, QUEEN, KING
@@ -40,9 +40,15 @@ public:
 	};
 
 private:
+	struct Indicator;
+
 	void LocatePieceOnSurface(const uint8_t& row, const uint8_t& col);
-	
-	bool isValidField(const sf::Vector2i &coords) noexcept;
+
+	void FocusPieceField(const sf::Vector2i& field_pos);
+	void UnfocusPieceField(const sf::Vector2i& field_pos);
+
+	bool isValidField(const sf::Vector2i& coords) noexcept;
+	bool isValidFocused() noexcept;
 
 	struct Indicator {
 		PieceColor color;
@@ -52,7 +58,9 @@ private:
 	sf::RenderTexture render_board;
 	sf::RenderTexture plain_board;
 	sf::RenderTexture pieces_surface;
+
 	const sf::Color light_field, dark_field, highlighted_field;
+	std::array<sf::Color, 2> grid_colors;
 
     const uint16_t WINDOW_SIZE, FIELD_SIZE;
 	static constexpr uint8_t BOARD_SIZE = 8;
@@ -60,5 +68,7 @@ private:
 	std::array<std::array<sf::Vector2f, BOARD_SIZE>, BOARD_SIZE> fields_coordinates;
 	std::array<std::array<Indicator, 8>, 8> pieces_indicator;
 	std::array<std::array<std::unique_ptr<Piece>, 12 + 1>, 2 + 1> pieces_templates;
+
+	sf::Vector2i curr_focused_pos;
 };
 
