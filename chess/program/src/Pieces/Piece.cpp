@@ -24,5 +24,5 @@ void Piece::PreparePieceTexture(const uint16_t& size) {
 
 
 void Piece::DrawPiece(sf::Vector2f& window_pos) {
-	board->DrawOnField(piece_sprite, window_pos);
+	board->DrawOnSurfaceField(piece_sprite, window_pos);
 }

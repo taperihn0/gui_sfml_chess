@@ -11,14 +11,32 @@ void Game::RunGame() {
 	board.PrepareBoard();
 
 	while (window.isOpen()) {
-		
 		window.draw(board.GetBoardSprite());
 		window.display();
 
-		while (window.waitEvent(processed_event)) {
-			if (processed_event.type == sf::Event::Closed) {
-				window.close();
-			}
+		if (window.waitEvent(processed_event)) {
+			CheckEvents(processed_event.type);
 		}
 	}
+}
+
+
+void Game::CheckEvents(const sf::Event::EventType &type) noexcept {
+	switch (type) {
+	case sf::Event::Closed: {
+		window.close();
+		break;
+	}
+	case sf::Event::MouseButtonPressed: {
+		CheckPressedMouse();
+		break;
+	}
+	default:
+		break;
+	}
+}
+
+
+void Game::CheckPressedMouse() {
+	board.FocusField(sf::Mouse::getPosition(window));
 }

@@ -2,47 +2,63 @@
 
 Board::Board(const uint16_t& window_size)
 	: light_field(sf::Color::Color(196, 164, 132)), dark_field(sf::Color::Color(128, 70, 27)),
-	WINDOW_SIZE(window_size), FIELD_SIZE(WINDOW_SIZE / BOARD_SIZE), pieces_templates{}, pieces_indicator{} {
+	highlighted_field(sf::Color::Color(240, 221, 115, 70)), WINDOW_SIZE(window_size), FIELD_SIZE(WINDOW_SIZE / BOARD_SIZE),
+	pieces_templates{}, pieces_indicator{} {
 	render_board.create(WINDOW_SIZE, WINDOW_SIZE);
 	plain_board.create(WINDOW_SIZE, WINDOW_SIZE);
+
+	pieces_surface.create(WINDOW_SIZE, WINDOW_SIZE);
+	pieces_surface.clear(sf::Color::Color(0, 0, 0, 0));
 }
 
-// path for pieces images: "./program/resource/wpawn.png" (example)
+
 void Board::PreparePiecesTemplate() {
 	// pawns templates
-	pieces_templates[int(PieceColor::WHITE)][int(PieceType::PAWN)] = std::make_unique<Piece>(Pawn("./program/resource/wpawn.png",
+	pieces_templates[int(PieceColor::WHITE)][int(PieceType::PAWN)] 
+		= std::make_unique<Piece>(Pawn("./program/resource/wpawn.png",
 		this, FIELD_SIZE, true));
-	pieces_templates[int(PieceColor::BLACK)][int(PieceType::PAWN)] = std::make_unique<Piece>(Pawn("./program/resource/bpawn.png",
+	pieces_templates[int(PieceColor::BLACK)][int(PieceType::PAWN)] 
+		= std::make_unique<Piece>(Pawn("./program/resource/bpawn.png",
 		this, FIELD_SIZE, false));
 
 	// rook templates
-	pieces_templates[int(PieceColor::WHITE)][int(PieceType::ROOK)] = std::make_unique<Piece>(Rook("./program/resource/wrook.png",
+	pieces_templates[int(PieceColor::WHITE)][int(PieceType::ROOK)] 
+		= std::make_unique<Piece>(Rook("./program/resource/wrook.png",
 		this, FIELD_SIZE));
-	pieces_templates[int(PieceColor::BLACK)][int(PieceType::ROOK)] = std::make_unique<Piece>(Rook("./program/resource/brook.png",
+	pieces_templates[int(PieceColor::BLACK)][int(PieceType::ROOK)] 
+		= std::make_unique<Piece>(Rook("./program/resource/brook.png",
 		this, FIELD_SIZE));
 
 	// knight templates
-	pieces_templates[int(PieceColor::WHITE)][int(PieceType::KNIGHT)] = std::make_unique<Piece>(Knight("./program/resource/wknight.png",
+	pieces_templates[int(PieceColor::WHITE)][int(PieceType::KNIGHT)] 
+		= std::make_unique<Piece>(Knight("./program/resource/wknight.png",
 		this, FIELD_SIZE));
-	pieces_templates[int(PieceColor::BLACK)][int(PieceType::KNIGHT)] = std::make_unique<Piece>(Knight("./program/resource/bknight.png",
+	pieces_templates[int(PieceColor::BLACK)][int(PieceType::KNIGHT)] 
+		= std::make_unique<Piece>(Knight("./program/resource/bknight.png",
 		this, FIELD_SIZE));
 
 	// bishop templates
-	pieces_templates[int(PieceColor::WHITE)][int(PieceType::BISHOP)] = std::make_unique<Piece>(Bishop("./program/resource/wbishop.png",
+	pieces_templates[int(PieceColor::WHITE)][int(PieceType::BISHOP)] 
+		= std::make_unique<Piece>(Bishop("./program/resource/wbishop.png",
 		this, FIELD_SIZE));
-	pieces_templates[int(PieceColor::BLACK)][int(PieceType::BISHOP)] = std::make_unique<Piece>(Bishop("./program/resource/bbishop.png",
+	pieces_templates[int(PieceColor::BLACK)][int(PieceType::BISHOP)] 
+		= std::make_unique<Piece>(Bishop("./program/resource/bbishop.png",
 		this, FIELD_SIZE));
 
 	// Queen templates
-	pieces_templates[int(PieceColor::WHITE)][int(PieceType::QUEEN)] = std::make_unique<Piece>(Queen("./program/resource/wqueen.png",
+	pieces_templates[int(PieceColor::WHITE)][int(PieceType::QUEEN)] 
+		= std::make_unique<Piece>(Queen("./program/resource/wqueen.png",
 		this, FIELD_SIZE));
-	pieces_templates[int(PieceColor::BLACK)][int(PieceType::QUEEN)] = std::make_unique<Piece>(Queen("./program/resource/bqueen.png",
+	pieces_templates[int(PieceColor::BLACK)][int(PieceType::QUEEN)] 
+		= std::make_unique<Piece>(Queen("./program/resource/bqueen.png",
 		this, FIELD_SIZE));
 
 	// and finally king
-	pieces_templates[int(PieceColor::WHITE)][int(PieceType::KING)] = std::make_unique<Piece>(King("./program/resource/wking.png",
+	pieces_templates[int(PieceColor::WHITE)][int(PieceType::KING)] 
+		= std::make_unique<Piece>(King("./program/resource/wking.png",
 		this, FIELD_SIZE));
-	pieces_templates[int(PieceColor::BLACK)][int(PieceType::KING)] = std::make_unique<Piece>(King("./program/resource/bking.png",
+	pieces_templates[int(PieceColor::BLACK)][int(PieceType::KING)] 
+		= std::make_unique<Piece>(King("./program/resource/bking.png",
 		this, FIELD_SIZE));
 }
 
@@ -65,22 +81,19 @@ void Board::PrepareBoard() {
 			plain_board.draw(field);
 
 			fields_coordinates[i][j] = real_window_pos;
+
+			// drawing default pieces distribution on the transparent
+			// pieces surface
+			LocatePieceOnSurface(i, j);
 		}
 	}
 
 	render_board.draw(sf::Sprite(plain_board.getTexture()));
-
-	// drawing default pieces distribution on the plain board
-	for (uint8_t i = 0; i < BOARD_SIZE; i++) {
-		for (uint8_t j = 0; j < BOARD_SIZE; j++) {
-			LocatePiece(i, j);
-		}
-	}
 }
 
 // Filling fields with starting postitions of pieces
 void Board::InitBoardFields() noexcept {
-	const auto&& last_row_index = BOARD_SIZE - 1;
+	const auto&& last_row_index(BOARD_SIZE - 1);
 
 	// rows of pawns
 	pieces_indicator[1].fill(Indicator{ PieceColor::BLACK, PieceType::PAWN });
@@ -117,14 +130,24 @@ void Board::InitBoardFields() noexcept {
 }
 
 
-void Board::DrawOnField(sf::Sprite& piece_sprite, sf::Vector2f& window_pos) {
+void Board::DrawOnSurfaceField(sf::Sprite& piece_sprite, sf::Vector2f& window_pos) {
 	piece_sprite.setPosition(window_pos);
-	render_board.draw(piece_sprite);
+	pieces_surface.draw(piece_sprite);
+}
+
+
+void Board::UpdateBoard() {
+	pieces_surface.display();
+	plain_board.display();
+
+	render_board.draw(sf::Sprite(plain_board.getTexture()));
+	render_board.draw(sf::Sprite(pieces_surface.getTexture()));
+	render_board.display();
 }
 
 
 sf::Sprite Board::GetBoardSprite() {
-	render_board.display();
+	UpdateBoard();
 	return sf::Sprite(render_board.getTexture());
 }
 
@@ -134,7 +157,26 @@ const uint16_t& Board::GetFieldSize() noexcept {
 }
 
 
-void Board::LocatePiece(const uint8_t &row, const uint8_t &col) {
+void Board::FocusField(const sf::Vector2i &mouse_pos) {
+	const sf::Vector2i field_pos(sf::Vector2i((mouse_pos.x - 1) / FIELD_SIZE, 
+		(mouse_pos.y - 1) / FIELD_SIZE));
+
+	if (!isValidField(field_pos)) {
+		return;
+	}
+	
+	std::cout << '.';
+	const auto& window_field_pos = fields_coordinates[field_pos.y][field_pos.x];
+	sf::RectangleShape field(sf::Vector2f(FIELD_SIZE, FIELD_SIZE));
+
+	field.setPosition(window_field_pos);
+	field.setFillColor(highlighted_field);
+
+	plain_board.draw(field);
+}
+
+
+void Board::LocatePieceOnSurface(const uint8_t &row, const uint8_t &col) {
 	const auto& piece = pieces_indicator[row][col];
 
 	if (piece.type == PieceType::EMPTY) {
@@ -142,4 +184,10 @@ void Board::LocatePiece(const uint8_t &row, const uint8_t &col) {
 	}
 
 	pieces_templates[int(piece.color)][int(piece.type)]->DrawPiece(fields_coordinates[row][col]);
+}
+
+
+bool Board::isValidField(const sf::Vector2i& coords) noexcept {
+	return (coords.x >= 0 and coords.x < BOARD_SIZE)
+		and (coords.y >= 0 and coords.y < BOARD_SIZE);
 }
