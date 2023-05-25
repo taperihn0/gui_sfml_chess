@@ -171,6 +171,7 @@
     <ClCompile Include="program\src\Queen\Queen.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="program\src\Indicator.h" />
     <ClInclude Include="program\src\King\King.h" />
     <ClInclude Include="program\src\Knight\Knight.h" />
     <ClInclude Include="program\src\Bishop\Bishop.h" />

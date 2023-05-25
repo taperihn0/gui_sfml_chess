@@ -1,9 +1,10 @@
 #include "Game.h"
 
 Game::Game(const sf::VideoMode& window_video_mode, const sf::String& window_title,
-	const sf::Uint32& style)
-	: window(window_video_mode, window_title, style), board(window_video_mode.width) 
+	const bool& show_console_board, const sf::Uint32& style)
+	: window(window_video_mode, window_title, style), board(window_video_mode.width, show_console_board)
 {}
+
 
 void Game::RunGame() {
 	sf::Event processed_event;
@@ -21,7 +22,7 @@ void Game::RunGame() {
 }
 
 
-void Game::CheckEvents(const sf::Event::EventType &type) noexcept {
+void Game::CheckEvents(const sf::Event::EventType& type) noexcept {
 	switch (type) {
 	case sf::Event::Closed: {
 		window.close();
@@ -38,5 +39,6 @@ void Game::CheckEvents(const sf::Event::EventType &type) noexcept {
 
 
 void Game::CheckPressedMouse() {
-	board.ProcessPressedMouse(sf::Mouse::getPosition(window));
+	mouse_pos = sf::Mouse::getPosition(window);
+	board.ProcessPressedMouse(mouse_pos);
 }

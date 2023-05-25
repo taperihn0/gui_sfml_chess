@@ -2,6 +2,7 @@
 
 #include <SFML\Graphics.hpp>
 
+#include "..\Indicator.h"
 #include "..\Pawn\Pawn.h"
 #include "..\Rook\Rook.h"
 #include "..\Bishop\Bishop.h"
@@ -9,51 +10,44 @@
 #include "..\Queen\Queen.h"
 #include "..\King\King.h"
 
-// <iostream> library just for amateur debuging purposes
 #include <iostream>
 #include <stdexcept>
 #include <array>
 #include <cstdint>
 #include <memory>
+#include <vector>
+#include <algorithm>
+#include <utility>
 
 class Board {
 public:
-	Board(const uint16_t& window_size);
+	Board(const uint16_t& window_size, const bool& show_console_board_);
 	void PreparePiecesTemplate();
 	void PrepareBoard();
 	void InitBoardFields() noexcept;
 
-	void DrawOnSurfaceField(sf::Sprite& piece_sprite, sf::Vector2f& window_pos);
+	void DrawOnPiecesSurfaceField(sf::Sprite& piece_sprite, sf::Vector2f& window_pos);
 
-	void UpdateBoard();
 	sf::Sprite GetBoardSprite();
 	const uint16_t& GetFieldSize() noexcept;
 
-	void ProcessPressedMouse(const sf::Vector2i &mouse_pos);
+	void ProcessPressedMouse(const sf::Vector2i& mouse_pos);
 
-	enum class PieceType {
-		EMPTY = 0, PAWN, BISHOP, KNIGHT, ROOK, QUEEN, KING
-	};
-
-	enum class PieceColor {
-		EMPTY = 0, WHITE, BLACK
-	};
-
+	static bool isValidField(const sf::Vector2i& coords) noexcept;
 private:
-	struct Indicator;
-
 	void LocatePieceOnSurface(const uint8_t& row, const uint8_t& col);
 
-	void FocusPieceField(const sf::Vector2i& field_pos);
+	void FocusPieceField(const PieceFlags::Indicator& picked_piece, const sf::Vector2i& field_pos);
 	void UnfocusPieceField(const sf::Vector2i& field_pos);
+	void MovePiece(const sf::Vector2i& new_move_field) noexcept;
 
-	bool isValidField(const sf::Vector2i& coords) noexcept;
 	bool isValidFocused() noexcept;
 
-	struct Indicator {
-		PieceColor color;
-		PieceType type;
-	};
+	std::pair<bool, sf::Vector2i> 
+	CheckAndGetIfFocused(const sf::Vector2i& coords);
+
+	void UpdateBoard();
+	void UpdatePiecesSurface();
 
 	sf::RenderTexture render_board;
 	sf::RenderTexture plain_board;
@@ -66,9 +60,12 @@ private:
 	static constexpr uint8_t BOARD_SIZE = 8;
 
 	std::array<std::array<sf::Vector2f, BOARD_SIZE>, BOARD_SIZE> fields_coordinates;
-	std::array<std::array<Indicator, 8>, 8> pieces_indicator;
+	std::array<std::array<PieceFlags::Indicator, 8>, 8> pieces_indicator;
 	std::array<std::array<std::unique_ptr<Piece>, 12 + 1>, 2 + 1> pieces_templates;
 
 	sf::Vector2i curr_focused_pos;
+	std::vector<sf::Vector2i> active_focused_field;
+
+	bool show_console_board;
 };
 

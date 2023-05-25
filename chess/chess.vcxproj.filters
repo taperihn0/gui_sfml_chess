@@ -74,5 +74,8 @@
     <ClInclude Include="program\src\King\King.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="program\src\Indicator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
