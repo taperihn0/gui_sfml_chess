@@ -11,17 +11,17 @@ public:
 
 	std::vector<sf::Vector2i>&& GetActiveFields(
 		const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
-		const sf::Vector2i& pos) override;
+		const sf::Vector2i& pos, const bool& clear = true) override;
 private:
 	void AvaibleMoves(const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
-		const bool& first_move_flag, sf::Vector2i& temp_vec);
+		const bool& first_move_flag, sf::Vector2i& temp_vec) noexcept;
 	void AvaibleCaptures(const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
-		sf::Vector2i& temp_vec);
+		sf::Vector2i& temp_vec) noexcept;
 
 	bool CheckCaptureField(
 		const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
 		const sf::Vector2i& pos) noexcept;
 
-	const int8_t direction;
+	const short direction;
 };
 

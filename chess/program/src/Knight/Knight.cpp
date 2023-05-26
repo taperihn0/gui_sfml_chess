@@ -3,53 +3,50 @@
 
 Knight::Knight(const std::string& texture_path, Board* board_ptr,
 	const uint16_t& size, const bool& is_white_flag)
-	: Piece(texture_path, board_ptr, size, PieceFlags::PieceColor(is_white_flag + 1)),
-	directions{ 2, 1 }
+	: Piece(texture_path, board_ptr, size, PieceFlags::PieceColor(2 - is_white_flag)),
+	directions{}
 {}
 
 // return current active fields of knight piece
 std::vector<sf::Vector2i>&& Knight::GetActiveFields(
 	const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
-	const sf::Vector2i& pos) {
-	avaible_fields.clear();
+	const sf::Vector2i& pos, const bool& clear) {
+	if (clear) {
+		avaible_fields.clear();
+	}
 
-	// (1) arm
-	AvaibleMovesCaptures(pieces_indicator);
+	directions = { 1, 2 };
 
-	// (2) arm
-	directions.d_x = -directions.d_x;
-	AvaibleMovesCaptures(pieces_indicator);
+	// generate 4 possible moves twice
+	for (int i = 0; i < 2; i++) {
+		AvaibleMovesCaptures(pieces_indicator, pos);
 
-	// (3) arm
-	std::swap(directions.d_x, directions.d_y);
-	AvaibleMovesCaptures(pieces_indicator);
+		directions.d_y = -directions.d_y;
+		AvaibleMovesCaptures(pieces_indicator, pos);
 
-	// (4) arm
-	directions.d_y= -directions.d_y;
-	AvaibleMovesCaptures(pieces_indicator);
+		directions.d_x = -directions.d_x;
+		AvaibleMovesCaptures(pieces_indicator, pos);
+
+		directions.d_y = -directions.d_y;
+		AvaibleMovesCaptures(pieces_indicator, pos);
+		
+		std::swap(directions.d_x, directions.d_y);
+	}
 
 	return std::move(avaible_fields);
 }
 
-// appending one avaible 'arm' from 4 avaible arms:
-// ---| (1)
-// |--- (2)
-// ...
-void Knight::AvaibleMovesCaptures(const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator) {
-	sf::Vector2i temp_vec;
+// check if pos + direction coordinates field is OK for knight
+void Knight::AvaibleMovesCaptures(const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
+	sf::Vector2i pos) noexcept {
+	pos.x += directions.d_x, pos.y += directions.d_y;
 
-	temp_vec.x = directions.d_x, temp_vec.y = directions.d_y;
-	if (CheckMoveCaptureField(pieces_indicator, temp_vec)) {
-		avaible_fields.push_back(temp_vec);
-	}
-
-	temp_vec.y = -temp_vec.y;
-	if (CheckMoveCaptureField(pieces_indicator, temp_vec)) {
-		avaible_fields.push_back(temp_vec);
+	if (CheckMoveCaptureField(pieces_indicator, pos)) {
+		avaible_fields.push_back(pos);
 	}
 }
 
-
+// check if knight can stand in the field of coordinates pos
 bool Knight::CheckMoveCaptureField(const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
 	const sf::Vector2i& pos) noexcept {
 	return Board::isValidField(pos) and

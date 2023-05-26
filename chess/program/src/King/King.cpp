@@ -8,6 +8,6 @@ King::King(const std::string& texture_path, Board* board_ptr,
 
 std::vector<sf::Vector2i>&& King::GetActiveFields(
 	const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
-	const sf::Vector2i& pos) {
+	const sf::Vector2i& pos, const bool& clear) {
 	return std::move(std::vector<sf::Vector2i>());
 }

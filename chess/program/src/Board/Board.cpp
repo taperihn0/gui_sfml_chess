@@ -172,26 +172,29 @@ void Board::ProcessPressedMouse(const sf::Vector2i& mouse_pos) {
 		return;
 	}
 
-	const auto& picked_piece = pieces_indicator[field_pos.y][field_pos.x];
+	const auto& picked_piece(pieces_indicator[field_pos.y][field_pos.x]);
 
 	// process mouse pressing by focusing a piece,
 	// unfocus it or move a piece
 
 	// variable for moving scenario
-	std::pair<bool, sf::Vector2i> move_field(CheckAndGetIfFocused(field_pos));
-
+	auto&& move_field(CheckAndGetIfFocused(field_pos));
+	
 	if (!isValidFocused() and
 		picked_piece.type != PieceFlags::PieceType::EMPTY) {
 		FocusPieceField(picked_piece, field_pos);
 	}
-	else if (field_pos == curr_focused_pos) {
+	else if (isValidFocused() and
+		field_pos == curr_focused_pos) {
 		UnfocusPieceField(field_pos);
 	}
-	else if (!move_field.first) {
+	else if (isValidFocused() and 
+		!move_field.is_found) {
 		UnfocusPieceField(curr_focused_pos);
 	}
-	else if (move_field.first) {
-		MovePiece(move_field.second);
+	else if (isValidFocused() and
+		move_field.is_found) {
+		MovePiece(move_field.active_clicked);
 		UnfocusPieceField(curr_focused_pos);
 	}
 }
@@ -262,7 +265,7 @@ void Board::UnfocusPieceField(const sf::Vector2i& field_pos) {
 }
 
 // move given piece
-void Board::MovePiece(const sf::Vector2i& new_move_field) noexcept {
+void Board::MovePiece(const sf::Vector2i& new_move_field) {
 	pieces_indicator[new_move_field.y][new_move_field.x] = pieces_indicator[curr_focused_pos.y][curr_focused_pos.x];
 	pieces_indicator[new_move_field.y][new_move_field.x].first_move = false;
 
@@ -283,7 +286,8 @@ bool Board::isValidFocused() noexcept {
 	return curr_focused_pos.x != -1 and curr_focused_pos.y != -1;
 }
 
-std::pair<bool, sf::Vector2i>
+// check whether field is in focus fields
+Board::FieldDataFlag 
 Board::CheckAndGetIfFocused(const sf::Vector2i& coords) {
 	auto found = std::find(active_focused_field.cbegin(), active_focused_field.cend(), coords);
 
@@ -302,6 +306,7 @@ void Board::UpdateBoard() {
 	render_board.draw(sf::Sprite(pieces_surface.getTexture()));
 	render_board.display();
 }
+
 
 void Board::UpdatePiecesSurface() {
 	pieces_surface.clear(sf::Color::Color(0, 0, 0, 0));

@@ -11,8 +11,10 @@ Pawn::Pawn(const std::string& texture_path, Board* board_ptr,
 // of the pawn and diagonal fields if capture is avaible
 std::vector<sf::Vector2i>&& Pawn::GetActiveFields(
 	const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
-	const sf::Vector2i& pos) {
-	avaible_fields.clear();
+	const sf::Vector2i& pos, const bool& clear) {
+	if (clear) {
+		avaible_fields.clear();
+	}
 
 	sf::Vector2i temp_vec;
 
@@ -29,7 +31,7 @@ std::vector<sf::Vector2i>&& Pawn::GetActiveFields(
 
 // compute avaible moves and append them
 void Pawn::AvaibleMoves(const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
-	const bool& first_move_flag, sf::Vector2i& temp_vec) {
+	const bool& first_move_flag, sf::Vector2i& temp_vec) noexcept {
 	if (pieces_indicator[temp_vec.y][temp_vec.x].type == PieceFlags::PieceType::EMPTY) {
 		avaible_fields.push_back(temp_vec);
 
@@ -42,7 +44,7 @@ void Pawn::AvaibleMoves(const std::array<std::array<PieceFlags::Indicator, 8>, 8
 
 // append avaible captures for pawn 
 void Pawn::AvaibleCaptures(const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
-	sf::Vector2i& temp_vec) {
+	sf::Vector2i& temp_vec) noexcept {
 	if (CheckCaptureField(pieces_indicator, temp_vec)) {
 		avaible_fields.push_back(temp_vec);
 	}

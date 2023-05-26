@@ -9,6 +9,6 @@ public:
 
 	std::vector<sf::Vector2i>&& GetActiveFields(
 		const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
-		const sf::Vector2i& pos) override;
+		const sf::Vector2i& pos, const bool& clear = true) override;
 };
 

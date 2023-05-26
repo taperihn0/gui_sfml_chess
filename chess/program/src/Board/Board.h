@@ -16,8 +16,6 @@
 #include <cstdint>
 #include <memory>
 #include <vector>
-#include <algorithm>
-#include <utility>
 
 class Board {
 public:
@@ -35,19 +33,26 @@ public:
 
 	static bool isValidField(const sf::Vector2i& coords) noexcept;
 private:
+	struct FieldDataFlag;
+
 	void LocatePieceOnSurface(const uint8_t& row, const uint8_t& col);
 
 	void FocusPieceField(const PieceFlags::Indicator& picked_piece, const sf::Vector2i& field_pos);
 	void UnfocusPieceField(const sf::Vector2i& field_pos);
-	void MovePiece(const sf::Vector2i& new_move_field) noexcept;
+	void MovePiece(const sf::Vector2i& new_move_field);
 
 	bool isValidFocused() noexcept;
 
-	std::pair<bool, sf::Vector2i> 
+	FieldDataFlag
 	CheckAndGetIfFocused(const sf::Vector2i& coords);
 
 	void UpdateBoard();
 	void UpdatePiecesSurface();
+
+	struct FieldDataFlag {
+		bool is_found;
+		sf::Vector2i active_clicked;
+	};
 
 	sf::RenderTexture render_board;
 	sf::RenderTexture plain_board;
@@ -66,6 +71,6 @@ private:
 	sf::Vector2i curr_focused_pos;
 	std::vector<sf::Vector2i> active_focused_field;
 
-	bool show_console_board;
+	const bool show_console_board;
 };
 
