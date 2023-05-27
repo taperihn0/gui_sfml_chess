@@ -2,9 +2,11 @@
 
 Board::Board(const uint16_t& window_size, const bool& show_console_board_)
 	: light_field(sf::Color::Color(196, 164, 132)), dark_field(sf::Color::Color(128, 70, 27)),
-	highlighted_field(sf::Color::Color(240, 221, 115, 120)), WINDOW_SIZE(window_size), FIELD_SIZE(WINDOW_SIZE / BOARD_SIZE),
+	highlighted_field(sf::Color::Color(240, 221, 115, 120)), upgrade_window_color(sf::Color::Color(208, 213, 219)),
+	WINDOW_SIZE(window_size), FIELD_SIZE(WINDOW_SIZE / BOARD_SIZE),
 	pieces_templates{}, pieces_indicator{}, curr_focused_pos(-1, -1), grid_colors{ light_field, dark_field },
-	show_console_board(show_console_board_) {
+	show_console_board(show_console_board_), is_pawn_upgrade_window(false) {
+
 	render_board.create(WINDOW_SIZE, WINDOW_SIZE);
 	plain_board.create(WINDOW_SIZE, WINDOW_SIZE);
 
@@ -93,57 +95,57 @@ void Board::PrepareBoard() {
 
 // Filling fields with starting postitions of pieces
 void Board::InitBoardFields() noexcept {
-	const auto&& last_row_index(BOARD_SIZE - 1);
+	const auto&& end_index(BOARD_SIZE - 1);
 
 	// rows of pawns
 	pieces_indicator[1].fill
 	(PieceFlags::Indicator{ PieceFlags::PieceColor::BLACK, PieceFlags::PieceType::PAWN, true });
-	pieces_indicator[last_row_index - 1].fill
+	pieces_indicator[end_index - 1].fill
 	(PieceFlags::Indicator{ PieceFlags::PieceColor::WHITE, PieceFlags::PieceType::PAWN, true });
 
 	// other pieces: rooks
 	pieces_indicator[0][0] = 
 		PieceFlags::Indicator{ PieceFlags::PieceColor::BLACK, PieceFlags::PieceType::ROOK, true };
-	pieces_indicator[0][last_row_index] = 
+	pieces_indicator[0][end_index] = 
 		PieceFlags::Indicator{ PieceFlags::PieceColor::BLACK, PieceFlags::PieceType::ROOK, true };
 
-	pieces_indicator[last_row_index][0] = 
+	pieces_indicator[end_index][0] = 
 		PieceFlags::Indicator{ PieceFlags::PieceColor::WHITE, PieceFlags::PieceType::ROOK, true };
-	pieces_indicator[last_row_index][last_row_index] = 
+	pieces_indicator[end_index][end_index] = 
 		PieceFlags::Indicator{ PieceFlags::PieceColor::WHITE, PieceFlags::PieceType::ROOK, true };
 
 	// knights
 	pieces_indicator[0][1] = 
 		PieceFlags::Indicator{ PieceFlags::PieceColor::BLACK, PieceFlags::PieceType::KNIGHT, true };
-	pieces_indicator[0][last_row_index - 1] = 
+	pieces_indicator[0][end_index - 1] = 
 		PieceFlags::Indicator{ PieceFlags::PieceColor::BLACK, PieceFlags::PieceType::KNIGHT, true };
 
-	pieces_indicator[last_row_index][1] = 
+	pieces_indicator[end_index][1] = 
 		PieceFlags::Indicator{ PieceFlags::PieceColor::WHITE, PieceFlags::PieceType::KNIGHT, true };
-	pieces_indicator[last_row_index][last_row_index - 1] =
+	pieces_indicator[end_index][end_index - 1] =
 		PieceFlags::Indicator{ PieceFlags::PieceColor::WHITE, PieceFlags::PieceType::KNIGHT, true };
 
 	// bishops
 	pieces_indicator[0][2] =
 		PieceFlags::Indicator{ PieceFlags::PieceColor::BLACK, PieceFlags::PieceType::BISHOP, true };
-	pieces_indicator[0][last_row_index - 2] = 
+	pieces_indicator[0][end_index - 2] = 
 		PieceFlags::Indicator{ PieceFlags::PieceColor::BLACK, PieceFlags::PieceType::BISHOP, true };
 
-	pieces_indicator[last_row_index][2] = 
+	pieces_indicator[end_index][2] = 
 		PieceFlags::Indicator{ PieceFlags::PieceColor::WHITE, PieceFlags::PieceType::BISHOP, true };
-	pieces_indicator[last_row_index][last_row_index - 2] =
+	pieces_indicator[end_index][end_index - 2] =
 		PieceFlags::Indicator{ PieceFlags::PieceColor::WHITE, PieceFlags::PieceType::BISHOP, true };
 
 	// queens
 	pieces_indicator[0][3] = 
 		PieceFlags::Indicator{ PieceFlags::PieceColor::BLACK, PieceFlags::PieceType::QUEEN, true };
-	pieces_indicator[last_row_index][3] = 
+	pieces_indicator[end_index][3] = 
 		PieceFlags::Indicator{ PieceFlags::PieceColor::WHITE, PieceFlags::PieceType::QUEEN, true };
 
 	// kings
 	pieces_indicator[0][4] = 
 		PieceFlags::Indicator{ PieceFlags::PieceColor::BLACK, PieceFlags::PieceType::KING, true };
-	pieces_indicator[last_row_index][4] = 
+	pieces_indicator[end_index][4] = 
 		PieceFlags::Indicator{ PieceFlags::PieceColor::WHITE, PieceFlags::PieceType::KING, true };
 }
 
@@ -164,6 +166,12 @@ const uint16_t& Board::GetFieldSize() noexcept {
 	return FIELD_SIZE;
 }
 
+// size of a chess board
+constexpr uint8_t Board::GetBoardSize() noexcept {
+	return BOARD_SIZE;
+}
+
+
 // process for every single click in the area of game window
 void Board::ProcessPressedMouse(const sf::Vector2i& mouse_pos) {
 	const sf::Vector2i field_pos((mouse_pos.x - 1) / FIELD_SIZE, (mouse_pos.y - 1) / FIELD_SIZE);
@@ -172,28 +180,30 @@ void Board::ProcessPressedMouse(const sf::Vector2i& mouse_pos) {
 		return;
 	}
 
-	const auto& picked_piece(pieces_indicator[field_pos.y][field_pos.x]);
-
 	// process mouse pressing by focusing a piece,
 	// unfocus it or move a piece
 
 	// variable for moving scenario
-	auto&& move_field(CheckAndGetIfFocused(field_pos));
+	const auto&& move_field(CheckAndGetIfFocused(field_pos));
+
+	const auto& picked_piece(pieces_indicator[field_pos.y][field_pos.x]);
+	const bool is_focus_flag(isValidFocused());
 	
-	if (!isValidFocused() and
-		picked_piece.type != PieceFlags::PieceType::EMPTY) {
+	if (is_pawn_upgrade_window) {
+		PickPieceOnWindow(field_pos);
+		return;
+	}
+
+	if (!is_focus_flag and picked_piece.type != PieceFlags::PieceType::EMPTY) {
 		FocusPieceField(picked_piece, field_pos);
 	}
-	else if (isValidFocused() and
-		field_pos == curr_focused_pos) {
-		UnfocusPieceField(field_pos);
-	}
-	else if (isValidFocused() and 
-		!move_field.is_found) {
+	else if (is_focus_flag and field_pos == curr_focused_pos) {
 		UnfocusPieceField(curr_focused_pos);
 	}
-	else if (isValidFocused() and
-		move_field.is_found) {
+	else if (is_focus_flag and !move_field.is_found) {
+		UnfocusPieceField(curr_focused_pos);
+	}
+	else if (is_focus_flag and move_field.is_found) {
 		MovePiece(move_field.active_clicked);
 		UnfocusPieceField(curr_focused_pos);
 	}
@@ -206,15 +216,15 @@ void Board::LocatePieceOnSurface(const uint8_t& row, const uint8_t& col) {
 	if (piece.type == PieceFlags::PieceType::EMPTY) {
 		return;
 	}
-
-	pieces_templates[int(piece.color)][int(piece.type)]->DrawPiece(fields_coordinates[row][col]);
+	pieces_templates[int(piece.color)][int(piece.type)]->
+		DrawPiece(fields_coordinates[row][col]);
 }
 
 // focusing after clicking on a piece
 void Board::FocusPieceField(const PieceFlags::Indicator& picked_piece, const sf::Vector2i& field_pos) {
 	
 	// drawing highlighted field under the piece
-	auto window_field_pos = fields_coordinates[field_pos.y][field_pos.x];
+	auto window_field_pos(fields_coordinates[field_pos.y][field_pos.x]);
 	sf::RectangleShape field(sf::Vector2f(FIELD_SIZE, FIELD_SIZE));
 
 	field.setPosition(window_field_pos);
@@ -225,7 +235,7 @@ void Board::FocusPieceField(const PieceFlags::Indicator& picked_piece, const sf:
 	// preparing his active fields and then drawing them
 	active_focused_field =
 		pieces_templates[int(picked_piece.color)][int(picked_piece.type)]->
-		GetActiveFields(pieces_indicator, field_pos);
+			GetActiveFields(pieces_indicator, field_pos);
 	
 	for (const auto& active_field : active_focused_field) {
 		window_field_pos = fields_coordinates[active_field.y][active_field.x];
@@ -264,21 +274,37 @@ void Board::UnfocusPieceField(const sf::Vector2i& field_pos) {
 	curr_focused_pos.y = -1, curr_focused_pos.x = -1;
 }
 
-// move given piece
+// move given piece to a given new field - 
+// occupy empty field or capture enemy piece there
 void Board::MovePiece(const sf::Vector2i& new_move_field) {
 	pieces_indicator[new_move_field.y][new_move_field.x] = pieces_indicator[curr_focused_pos.y][curr_focused_pos.x];
 	pieces_indicator[new_move_field.y][new_move_field.x].first_move = false;
 
 	pieces_indicator[curr_focused_pos.y][curr_focused_pos.x] = PieceFlags::Indicator{ PieceFlags::PieceColor::EMPTY,
-	PieceFlags::PieceType::EMPTY, false };
+		PieceFlags::PieceType::EMPTY, false };
 
 	UpdatePiecesSurface();
+
+	// Check if the moved piece was pawn and
+	// his new field is in the last row -
+	// it means pawn can be upgraded
+	const auto& moved_piece(pieces_indicator[new_move_field.y][new_move_field.x]);
+	bool is_upgrade(false);
+
+	if (moved_piece.type == PieceFlags::PieceType::PAWN) {
+		is_upgrade = dynamic_cast<Pawn*>(pieces_templates[int(moved_piece.color)][int(moved_piece.type)].get())->
+			CheckForUpgrade(pieces_indicator, new_move_field);
+	}
+	
+	if (is_upgrade) {
+		OpenPawnUpgradeWindow(new_move_field);
+	}
 }
 
 // checking whether given coordinates are valid for my board
 bool Board::isValidField(const sf::Vector2i& coords) noexcept {
-	return (coords.x >= 0 and coords.x < BOARD_SIZE)
-		and (coords.y >= 0 and coords.y < BOARD_SIZE);
+	return (coords.x >= 0 and coords.x < BOARD_SIZE) and
+		(coords.y >= 0 and coords.y < BOARD_SIZE);
 }
 
 // checking whether my focus flag is set
@@ -297,11 +323,73 @@ Board::CheckAndGetIfFocused(const sf::Vector2i& coords) {
 	return { false, sf::Vector2i() };
 }
 
+// draw window with pieces when pawn is upgrading
+void Board::OpenPawnUpgradeWindow(const sf::Vector2i& pos) {
+	upgrading_color = pieces_indicator[pos.y][pos.x].color;
+	upgrading_x_pos = pos.x;
+
+	list_of_window_pieces = {
+		PieceFlags::PieceType::BISHOP,
+		PieceFlags::PieceType::KNIGHT,
+		PieceFlags::PieceType::ROOK,
+		PieceFlags::PieceType::QUEEN
+	};
+
+	uint8_t y = BOARD_SIZE - 1, direct = -1;
+	if (upgrading_color == PieceFlags::PieceColor::WHITE) {
+		std::reverse(list_of_window_pieces.begin(), list_of_window_pieces.end());
+		y = 0, direct = 1;
+	}
+	
+	sf::Vector2f window_field_pos;
+	sf::RectangleShape field(sf::Vector2f(FIELD_SIZE, FIELD_SIZE));
+
+	field.setFillColor(upgrade_window_color);
+
+	for (const auto& displ_piece : list_of_window_pieces) {
+		window_field_pos = fields_coordinates[y][upgrading_x_pos];
+		field.setPosition(window_field_pos);
+		pieces_surface.draw(field);
+
+		pieces_templates[int(upgrading_color)][int(displ_piece)]->
+			DrawPiece(fields_coordinates[y][upgrading_x_pos]);
+
+		y += direct;
+	}
+	
+	is_pawn_upgrade_window = true;
+
+}
+
+// process mouse click - 
+// if it's not valid, just wait for 
+// proper click pos and leave window turned on
+void Board::PickPieceOnWindow(const sf::Vector2i& pos) {
+	if (pos.x != upgrading_x_pos) {
+		return;
+	}
+	else if (upgrading_color == PieceFlags::PieceColor::WHITE and 
+		pos.y >= 0 and pos.y < list_of_window_pieces.size()) {
+		pieces_indicator[0][pos.y] =
+			PieceFlags::Indicator{ upgrading_color, list_of_window_pieces[pos.y] };
+
+		is_pawn_upgrade_window = false;
+	}
+	else if (upgrading_color == PieceFlags::PieceColor::BLACK and
+		pos.y <= BOARD_SIZE - 1 and pos.y > BOARD_SIZE - 1 - list_of_window_pieces.size()) {
+		pieces_indicator[BOARD_SIZE - 1][(BOARD_SIZE - 1) - pos.y] =
+			PieceFlags::Indicator{ upgrading_color, list_of_window_pieces[pos.y] };
+		
+		is_pawn_upgrade_window = false;
+	}
+}
+
 // updating render_board sprite
 void Board::UpdateBoard() {
 	pieces_surface.display();
 	plain_board.display();
 
+	// first draw ready plain_board, and then surface of pieces
 	render_board.draw(sf::Sprite(plain_board.getTexture()));
 	render_board.draw(sf::Sprite(pieces_surface.getTexture()));
 	render_board.display();

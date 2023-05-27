@@ -37,7 +37,8 @@ std::vector<sf::Vector2i>&& Knight::GetActiveFields(
 }
 
 // check if pos + direction coordinates field is OK for knight
-void Knight::AvaibleMovesCaptures(const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
+void Knight::AvaibleMovesCaptures(
+	const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
 	sf::Vector2i pos) noexcept {
 	pos.x += directions.d_x, pos.y += directions.d_y;
 
@@ -46,8 +47,9 @@ void Knight::AvaibleMovesCaptures(const std::array<std::array<PieceFlags::Indica
 	}
 }
 
-// check if knight can stand in the field of coordinates pos
-bool Knight::CheckMoveCaptureField(const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
+// check if knight can stand up straight in the field of coordinates pos
+bool Knight::CheckMoveCaptureField(
+	const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
 	const sf::Vector2i& pos) noexcept {
 	return Board::isValidField(pos) and
 		(pieces_indicator[pos.y][pos.x].type == PieceFlags::PieceType::EMPTY or

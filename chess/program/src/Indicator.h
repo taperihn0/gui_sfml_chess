@@ -13,5 +13,7 @@ namespace PieceFlags {
 		PieceColor color;
 		PieceType type;
 		bool first_move;
+
+		// PieceColor active_of_color;
 	};
 }

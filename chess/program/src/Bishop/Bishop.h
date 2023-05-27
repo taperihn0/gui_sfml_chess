@@ -11,13 +11,9 @@ public:
 	std::vector<sf::Vector2i>&& GetActiveFields(
 		const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
 		const sf::Vector2i& pos, const bool& clear = true) override;
-
-	static bool CheckFieldFreeValid(const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
-		const sf::Vector2i& pos) noexcept;
-	static bool CheckFieldOccupied(const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
-		const sf::Vector2i& pos, const PieceFlags::PieceColor& piece_color) noexcept;
 private:
-	void ProcessDiagonal(const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
+	void ProcessDiagonal(
+		const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
 		sf::Vector2i pos, const sf::Vector2i& direction) noexcept;
 };
 

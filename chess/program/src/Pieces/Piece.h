@@ -21,15 +21,23 @@ public:
 	virtual std::vector<sf::Vector2i>&& GetActiveFields(
 		const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
 		const sf::Vector2i& pos, const bool& clear = true) = 0;
+
+	bool CheckFieldFreeValid(
+		const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
+		const sf::Vector2i& pos) noexcept;
+
+	bool CheckFieldOccupied(
+		const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
+		const sf::Vector2i& pos, const PieceFlags::PieceColor& piece_color) noexcept;
 protected:
 	sf::Sprite piece_sprite;
 	std::vector<sf::Vector2i> avaible_fields;
 	
 	Board* const board;
 
-	PieceFlags::PieceColor piece_color;
+	const PieceFlags::PieceColor piece_color;
 
 	const std::string piece_texture_path;
-	std::shared_ptr<sf::Texture> piece_texture_ptr;
+	const std::unique_ptr<sf::Texture> piece_texture_ptr;
 };
 

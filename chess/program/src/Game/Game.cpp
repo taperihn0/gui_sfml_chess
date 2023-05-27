@@ -22,7 +22,7 @@ void Game::RunGame() {
 }
 
 
-void Game::CheckEvents(const sf::Event::EventType& type) noexcept {
+void Game::CheckEvents(const sf::Event::EventType& type) {
 	switch (type) {
 	case sf::Event::Closed: {
 		window.close();

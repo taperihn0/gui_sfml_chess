@@ -12,15 +12,26 @@ public:
 	std::vector<sf::Vector2i>&& GetActiveFields(
 		const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
 		const sf::Vector2i& pos, const bool& clear = true) override;
+
+	bool CheckForUpgrade(
+		const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
+		const sf::Vector2i& pos);
 private:
-	void AvaibleMoves(const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
+	void AvaibleMoves(
+		const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
 		const bool& first_move_flag, sf::Vector2i& temp_vec) noexcept;
-	void AvaibleCaptures(const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
+
+	void AvaibleCaptures(
+		const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
 		sf::Vector2i& temp_vec) noexcept;
 
 	bool CheckCaptureField(
 		const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
 		const sf::Vector2i& pos) noexcept;
+
+	void Upgrade(
+		const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
+		const sf::Vector2i& pos);
 
 	const short direction;
 };

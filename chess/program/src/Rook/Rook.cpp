@@ -28,16 +28,17 @@ std::vector<sf::Vector2i>&& Rook::GetActiveFields(
 }
 
 // go through straight line of rook's active fields
-void Rook::ProcessLine(const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
+void Rook::ProcessLine(
+	const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
 	sf::Vector2i pos, const sf::Vector2i& direction) noexcept {
 	pos += direction;
 
-	while (Bishop::CheckFieldFreeValid(pieces_indicator, pos)) {
+	while (CheckFieldFreeValid(pieces_indicator, pos)) {
 		avaible_fields.push_back(pos);
 		pos += direction;
 	}
 
-	if (Bishop::CheckFieldOccupied(pieces_indicator, pos, piece_color)) {
+	if (CheckFieldOccupied(pieces_indicator, pos, piece_color)) {
 		avaible_fields.push_back(pos);
 	}
 }

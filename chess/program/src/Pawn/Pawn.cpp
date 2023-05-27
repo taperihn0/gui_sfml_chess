@@ -29,21 +29,31 @@ std::vector<sf::Vector2i>&& Pawn::GetActiveFields(
 	return std::move(avaible_fields);
 }
 
+// checking whether pawn can be upgraded
+bool Pawn::CheckForUpgrade(
+	const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
+	const sf::Vector2i& pos) {
+	return (piece_color == PieceFlags::PieceColor::WHITE and pos.y == 0) or
+		(piece_color == PieceFlags::PieceColor::BLACK and pos.y == 8 - 1);
+}
+
 // compute avaible moves and append them
-void Pawn::AvaibleMoves(const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
+void Pawn::AvaibleMoves(
+	const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
 	const bool& first_move_flag, sf::Vector2i& temp_vec) noexcept {
 	if (pieces_indicator[temp_vec.y][temp_vec.x].type == PieceFlags::PieceType::EMPTY) {
 		avaible_fields.push_back(temp_vec);
 
-		if (first_move_flag) {
-			temp_vec.y += direction;
+		temp_vec.y += direction;
+		if (first_move_flag and CheckFieldFreeValid(pieces_indicator, temp_vec)) {
 			avaible_fields.push_back(temp_vec);
 		}
 	}
 }
 
 // append avaible captures for pawn 
-void Pawn::AvaibleCaptures(const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
+void Pawn::AvaibleCaptures(
+	const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
 	sf::Vector2i& temp_vec) noexcept {
 	if (CheckCaptureField(pieces_indicator, temp_vec)) {
 		avaible_fields.push_back(temp_vec);
@@ -59,7 +69,5 @@ void Pawn::AvaibleCaptures(const std::array<std::array<PieceFlags::Indicator, 8>
 bool Pawn::CheckCaptureField(
 	const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator, 
 	const sf::Vector2i& pos) noexcept {
-	return Board::isValidField(pos) and
-		pieces_indicator[pos.y][pos.x].type != PieceFlags::PieceType::EMPTY and
-		pieces_indicator[pos.y][pos.x].color != piece_color;
+	return CheckFieldOccupied(pieces_indicator, pos, piece_color);
 }

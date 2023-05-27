@@ -9,7 +9,7 @@ public:
 
 	void RunGame();
 private:
-	void CheckEvents(const sf::Event::EventType& type) noexcept;
+	void CheckEvents(const sf::Event::EventType& type);
 	void CheckPressedMouse();
 
 	sf::RenderWindow window;

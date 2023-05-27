@@ -11,10 +11,12 @@ public:
 		const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
 		const sf::Vector2i& pos, const bool& clear = true) override;
 private:
-	void AvaibleMovesCaptures(const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
+	void AvaibleMovesCaptures(
+		const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
 		sf::Vector2i pos) noexcept;
 
-	bool CheckMoveCaptureField(const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
+	bool CheckMoveCaptureField(
+		const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
 		const sf::Vector2i& pos) noexcept;
 
 	struct delta_directions {
