@@ -4,7 +4,7 @@
 Pawn::Pawn(const std::string& texture_path, Board* board_ptr,
 	const uint16_t& size, const bool& is_white_flag)
 	: Piece(texture_path, board_ptr, size, PieceFlags::PieceColor(2 - is_white_flag)),
-	direction(is_white_flag? -1 : 1) 
+	direction(is_white_flag? -1 : 1), move_count(0)
 {}
 
 // return active fields of path - its move fields in front 
@@ -20,11 +20,13 @@ std::vector<sf::Vector2i>&& Pawn::GetActiveFields(
 
 	// append avaible moves of a piece without capturing
 	temp_vec.x = pos.x, temp_vec.y = pos.y + direction;
-	AvaibleMoves(pieces_indicator, pieces_indicator[pos.y][pos.x].first_move, temp_vec);
+	AvaibleMoves(pieces_indicator, pieces_indicator[pos.y][pos.x].CheckMove(0), temp_vec);
 
 	// capturing both diagonals
 	temp_vec.x = pos.x - 1, temp_vec.y = pos.y + direction;
 	AvaibleCaptures(pieces_indicator, temp_vec);
+
+	CheckAppendEnPassantCapture(pieces_indicator, pos);
 
 	return std::move(avaible_fields);
 }
@@ -52,6 +54,7 @@ void Pawn::AvaibleMoves(
 }
 
 // append avaible captures for pawn 
+// and check if en passant capture is avaible
 void Pawn::AvaibleCaptures(
 	const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
 	sf::Vector2i& temp_vec) noexcept {
@@ -65,9 +68,44 @@ void Pawn::AvaibleCaptures(
 	}
 }
 
+
+void Pawn::CheckAppendEnPassantCapture(
+	const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
+	const sf::Vector2i& pos) {
+	const bool& green_flag = (piece_color == PieceFlags::PieceColor::WHITE and pos.y == 3) or
+		(piece_color == PieceFlags::PieceColor::BLACK and pos.y == 4);
+
+	sf::Vector2i temp_vec;
+
+	// first side
+	temp_vec.x = pos.x - 1, temp_vec.y = pos.y;
+	if (green_flag and
+		CheckOccupiedFieldPawn(pieces_indicator, temp_vec)) {
+		avaible_fields.push_back(temp_vec + sf::Vector2i(0, direction));
+	}
+
+	// second side
+	temp_vec.x += 2;
+	if (green_flag and
+		CheckOccupiedFieldPawn(pieces_indicator, temp_vec)) {
+		avaible_fields.push_back(temp_vec + sf::Vector2i(0, direction));
+	}
+}
+
 // just check if the field can be captured by the pawn
 bool Pawn::CheckCaptureField(
 	const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator, 
 	const sf::Vector2i& pos) noexcept {
 	return CheckFieldOccupied(pieces_indicator, pos, piece_color);
+}
+
+// checking whether field is occupied by enemy pawn
+// and whether it was his first move there
+bool Pawn::CheckOccupiedFieldPawn(
+	const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
+	const sf::Vector2i& pos) noexcept {
+	return Board::isValidField(pos) and
+		pieces_indicator[pos.y][pos.x].color != piece_color and
+		pieces_indicator[pos.y][pos.x].type == PieceFlags::PieceType::PAWN and
+		pieces_indicator[pos.y][pos.x].CheckMove(1);
 }

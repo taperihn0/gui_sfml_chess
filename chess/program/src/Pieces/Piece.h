@@ -29,6 +29,8 @@ public:
 	bool CheckFieldOccupied(
 		const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
 		const sf::Vector2i& pos, const PieceFlags::PieceColor& piece_color) noexcept;
+
+	virtual ~Piece() = default;
 protected:
 	sf::Sprite piece_sprite;
 	std::vector<sf::Vector2i> avaible_fields;

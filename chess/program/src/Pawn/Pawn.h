@@ -25,14 +25,19 @@ private:
 		const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
 		sf::Vector2i& temp_vec) noexcept;
 
+	void CheckAppendEnPassantCapture(
+		const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
+		const sf::Vector2i& pos);
+
 	bool CheckCaptureField(
 		const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
 		const sf::Vector2i& pos) noexcept;
 
-	void Upgrade(
+	bool CheckOccupiedFieldPawn(
 		const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
-		const sf::Vector2i& pos);
+		const sf::Vector2i& pos) noexcept;
 
 	const short direction;
+	uint16_t move_count;
 };
 
