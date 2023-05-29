@@ -5,7 +5,7 @@ Board::Board(const uint16_t& window_size, const bool& show_console_board_)
 	highlighted_field(sf::Color::Color(240, 221, 115, 120)), upgrade_window_color(sf::Color::Color(208, 213, 219)),
 	WINDOW_SIZE(window_size), FIELD_SIZE(WINDOW_SIZE / BOARD_SIZE),
 	pieces_templates{}, pieces_indicator{}, curr_focused_pos(-1, -1), grid_colors{ light_field, dark_field },
-	show_console_board(show_console_board_), is_pawn_upgrade_window(false) {
+	show_console_board(show_console_board_), is_pawn_upgrade_window(false), is_white_turn(true) {
 
 	list_of_window_pieces = {
 		PieceFlags::PieceType::QUEEN,
@@ -195,10 +195,20 @@ void Board::ProcessPressedMouse(const sf::Vector2i& mouse_pos) {
 	const auto& picked_piece(pieces_indicator[field_pos.y][field_pos.x]);
 	const bool is_focus_flag(isValidFocused());
 	
+	// if whites' turn, then focus only white pieces
+	// else blacks' turn.
+	// but when any piece is already focused,
+	// force player to move it or unfocus it.
+
 	if (is_pawn_upgrade_window) {
 		PickPieceOnWindow(field_pos);
+		return;
 	}
-	else if (!is_focus_flag and picked_piece.type != PieceFlags::PieceType::EMPTY) {
+
+	const bool is_turn_color(CheckCurrTurnColor(picked_piece.color));
+
+	if (!is_focus_flag and picked_piece.type != PieceFlags::PieceType::EMPTY and
+		is_turn_color) {
 		FocusPieceField(picked_piece, field_pos);
 	}
 	else if (is_focus_flag and field_pos == curr_focused_pos) {
@@ -289,12 +299,13 @@ void Board::MovePiece(const sf::Vector2i& new_move_field) {
 
 	pieces_indicator[new_move_field.y][new_move_field.x].IncrementMoveCount();
 
+	ChangePlayersTurn();
 	UpdatePiecesSurface();
 
 	// Check if the moved piece was pawn and
 	// his new field is in the last row -
 	// it means pawn can be upgraded
-	//
+	
 	// Set pawn's first_move flag 
 	const auto& moved_piece(pieces_indicator[new_move_field.y][new_move_field.x]);
 	bool is_upgrade(false);
@@ -329,6 +340,11 @@ Board::CheckAndGetIfFocused(const sf::Vector2i& coords) {
 		return { true, *found };
 	}
 	return { false, sf::Vector2i() };
+}
+
+
+bool Board::CheckCurrTurnColor(const PieceFlags::PieceColor& color) noexcept {
+	return color == static_cast<PieceFlags::PieceColor>(static_cast<int>(PieceFlags::PieceColor::BLACK) - is_white_turn);
 }
 
 // draw window with pieces when pawn is upgrading
@@ -415,4 +431,10 @@ void Board::UpdatePiecesSurface() {
 	if (show_console_board) {
 		std::cout << std::string(15, '*') << '\n';
 	}
+}
+
+// change is_white_turn variable to indicate 
+// whose is turn now
+void Board::ChangePlayersTurn() noexcept {
+	is_white_turn = !is_white_turn;
 }

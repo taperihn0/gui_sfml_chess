@@ -48,11 +48,14 @@ private:
 	FieldDataFlag
 	CheckAndGetIfFocused(const sf::Vector2i& coords);
 
+	bool CheckCurrTurnColor(const PieceFlags::PieceColor& color) noexcept;
+
 	void OpenPawnUpgradeWindow(const sf::Vector2i& pos);
 	void PickPieceOnWindow(const sf::Vector2i& pos);
 
 	void UpdateBoard();
 	void UpdatePiecesSurface();
+	void ChangePlayersTurn() noexcept;
 
 	struct FieldDataFlag {
 		bool is_found;
@@ -84,5 +87,7 @@ private:
 	bool is_pawn_upgrade_window;
 	PieceFlags::PieceColor upgrading_color;
 	uint8_t upgrading_x_pos;
+
+	bool is_white_turn;
 };
 
