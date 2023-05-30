@@ -4,7 +4,7 @@ Board::Board(const uint16_t& window_size, const bool& show_console_board_)
 	: light_field(sf::Color::Color(196, 164, 132)), dark_field(sf::Color::Color(128, 70, 27)),
 	highlighted_field(sf::Color::Color(240, 221, 115, 120)), upgrade_window_color(sf::Color::Color(208, 213, 219)),
 	WINDOW_SIZE(window_size), FIELD_SIZE(WINDOW_SIZE / BOARD_SIZE),
-	pieces_templates{}, pieces_indicator{}, curr_focused_pos(-1, -1), grid_colors{ light_field, dark_field },
+	pieces_templates{}, pieces_indicator{}, en_passant_pos(-1, -1), curr_focused_pos(-1, -1), grid_colors{ light_field, dark_field },
 	show_console_board(show_console_board_), is_pawn_upgrade_window(false), is_white_turn(true) {
 
 	list_of_window_pieces = {
@@ -178,6 +178,13 @@ constexpr uint8_t Board::GetBoardSize() noexcept {
 	return BOARD_SIZE;
 }
 
+// return current field, which contain pawn
+// which is possible to capture by en passant technique - 
+// there is only one such pawn on the board
+const sf::Vector2i& Board::GetEnPassantPos() noexcept {
+	return en_passant_pos;
+}
+
 // process for every single click in the area of game window
 void Board::ProcessPressedMouse(const sf::Vector2i& mouse_pos) {
 	const sf::Vector2i field_pos((mouse_pos.x - 1) / FIELD_SIZE, (mouse_pos.y - 1) / FIELD_SIZE);
@@ -297,7 +304,10 @@ void Board::MovePiece(const sf::Vector2i& new_move_field) {
 	pieces_indicator[curr_focused_pos.y][curr_focused_pos.x] =
 		PieceFlags::Indicator{ PieceFlags::PieceColor::EMPTY, PieceFlags::PieceType::EMPTY, false };
 
-	pieces_indicator[new_move_field.y][new_move_field.x].IncrementMoveCount();
+	auto& moved_piece(pieces_indicator[new_move_field.y][new_move_field.x]);
+	moved_piece.IncrementMoveCount();
+
+	EnPassantCase(new_move_field, moved_piece);
 
 	ChangePlayersTurn();
 	UpdatePiecesSurface();
@@ -307,11 +317,11 @@ void Board::MovePiece(const sf::Vector2i& new_move_field) {
 	// it means pawn can be upgraded
 	
 	// Set pawn's first_move flag 
-	const auto& moved_piece(pieces_indicator[new_move_field.y][new_move_field.x]);
 	bool is_upgrade(false);
 
 	if (moved_piece.type == PieceFlags::PieceType::PAWN) {
-		is_upgrade = dynamic_cast<Pawn*>(pieces_templates[int(moved_piece.color)][int(moved_piece.type)].get())->
+		is_upgrade = 
+			dynamic_cast<Pawn*>(pieces_templates[int(moved_piece.color)][int(moved_piece.type)].get())->
 			CheckForUpgrade(pieces_indicator, new_move_field);
 	}
 	
@@ -342,7 +352,7 @@ Board::CheckAndGetIfFocused(const sf::Vector2i& coords) {
 	return { false, sf::Vector2i() };
 }
 
-
+// checking whether given color is the same as current color of moving player
 bool Board::CheckCurrTurnColor(const PieceFlags::PieceColor& color) noexcept {
 	return color == static_cast<PieceFlags::PieceColor>(static_cast<int>(PieceFlags::PieceColor::BLACK) - is_white_turn);
 }
@@ -410,7 +420,34 @@ void Board::UpdateBoard() {
 	render_board.display();
 }
 
+// all the problems with en passant capture in one function -
+// capturing and updating current pawn which can be captured using en passant technique
+void Board::EnPassantCase(const sf::Vector2i& new_move_field, const PieceFlags::Indicator& moved_piece) {
+	if (moved_piece.type != PieceFlags::PieceType::PAWN) {
+		return;
+	}
 
+	// capturing pawn using en passant
+	const auto& d
+		= dynamic_cast<Pawn*>(pieces_templates[int(moved_piece.color)][int(moved_piece.type)].get())->
+		GetDirection();
+
+	pieces_indicator[new_move_field.y - d][new_move_field.x] =
+		PieceFlags::Indicator{ PieceFlags::PieceColor::EMPTY, PieceFlags::PieceType::EMPTY, false };
+
+	// setting en passant position
+	const bool is_double_field_move = (moved_piece.color == PieceFlags::PieceColor::WHITE and new_move_field.y == 4) or
+		(moved_piece.color == PieceFlags::PieceColor::BLACK and new_move_field.y == 3);
+
+	if (is_double_field_move and moved_piece.CheckMove(1)) {
+		SetEnPassantPos(new_move_field.x, new_move_field.y);
+	}
+	else {
+		SetEnPassantPos(-1, -1);
+	}
+}
+
+// update pieces on their alpha surfaces
 void Board::UpdatePiecesSurface() {
 	pieces_surface.clear(sf::Color::Color(0, 0, 0, 0));
 
@@ -429,7 +466,7 @@ void Board::UpdatePiecesSurface() {
 	}
 
 	if (show_console_board) {
-		std::cout << std::string(15, '*') << '\n';
+		std::cout << std::string(15, '*') << ' ' << en_passant_pos.x << ' ' << en_passant_pos.y << '\n';
 	}
 }
 
@@ -437,4 +474,9 @@ void Board::UpdatePiecesSurface() {
 // whose is turn now
 void Board::ChangePlayersTurn() noexcept {
 	is_white_turn = !is_white_turn;
+}
+
+// reset current en passant position
+void Board::SetEnPassantPos(const int& x, const int& y) noexcept {
+	en_passant_pos.x = x, en_passant_pos.y = y;
 }

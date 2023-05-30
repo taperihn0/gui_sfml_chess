@@ -39,6 +39,11 @@ bool Pawn::CheckForUpgrade(
 		(piece_color == PieceFlags::PieceColor::BLACK and pos.y == 8 - 1);
 }
 
+
+const short& Pawn::GetDirection() noexcept {
+	return direction;
+}
+
 // compute avaible moves and append them
 void Pawn::AvaibleMoves(
 	const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
@@ -107,5 +112,6 @@ bool Pawn::CheckOccupiedFieldPawn(
 	return Board::isValidField(pos) and
 		pieces_indicator[pos.y][pos.x].color != piece_color and
 		pieces_indicator[pos.y][pos.x].type == PieceFlags::PieceType::PAWN and
-		pieces_indicator[pos.y][pos.x].CheckMove(1);
+		pieces_indicator[pos.y][pos.x].CheckMove(1) and
+		board->GetEnPassantPos() == pos;
 }

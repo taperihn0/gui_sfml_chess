@@ -30,6 +30,7 @@ public:
 	sf::Sprite GetBoardSprite();
 	const uint16_t& GetFieldSize() noexcept;
 	static constexpr uint8_t GetBoardSize() noexcept;
+	const sf::Vector2i& GetEnPassantPos() noexcept;
 
 	void ProcessPressedMouse(const sf::Vector2i& mouse_pos);
 
@@ -54,8 +55,12 @@ private:
 	void PickPieceOnWindow(const sf::Vector2i& pos);
 
 	void UpdateBoard();
+
+	void EnPassantCase(const sf::Vector2i& new_move_field, const PieceFlags::Indicator& moved_piece);
 	void UpdatePiecesSurface();
 	void ChangePlayersTurn() noexcept;
+
+	void SetEnPassantPos(const int& x, const int& y) noexcept;
 
 	struct FieldDataFlag {
 		bool is_found;
@@ -77,6 +82,7 @@ private:
 	std::array<std::array<PieceFlags::Indicator, BOARD_SIZE>, BOARD_SIZE> pieces_indicator;
 	std::array<std::array<std::unique_ptr<Piece>, 12 + 1>, 2 + 1> pieces_templates;
 
+	sf::Vector2i en_passant_pos;
 	sf::Vector2i curr_focused_pos;
 	std::vector<sf::Vector2i> active_focused_field;
 
@@ -90,4 +96,3 @@ private:
 
 	bool is_white_turn;
 };
-

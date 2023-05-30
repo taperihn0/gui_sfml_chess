@@ -16,6 +16,8 @@ public:
 	bool CheckForUpgrade(
 		const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
 		const sf::Vector2i& pos);
+
+	const short& GetDirection() noexcept;
 private:
 	void AvaibleMoves(
 		const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
