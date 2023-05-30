@@ -38,7 +38,8 @@ public:
 private:
 	struct FieldDataFlag;
 
-	void LocatePieceOnSurface(const uint8_t& row, const uint8_t& col);
+	void LocatePieceOnSurface(const uint8_t& y, const uint8_t& x);
+	void SetPieceOccupiedFields(const PieceFlags::Indicator& piece, const uint8_t& y, const uint8_t& x);
 
 	void FocusPieceField(const PieceFlags::Indicator& picked_piece, const sf::Vector2i& field_pos);
 	void UnfocusPieceField(const sf::Vector2i& field_pos);
@@ -71,8 +72,11 @@ private:
 	sf::RenderTexture plain_board;
 	sf::RenderTexture pieces_surface;
 
-	const sf::Color light_field, dark_field, highlighted_field,
-		upgrade_window_color;
+	const sf::Color light_field,
+					dark_field, 
+					highlighted_field,
+					upgrade_window_color;
+
 	std::array<sf::Color, 2> grid_colors;
 
     const uint16_t WINDOW_SIZE, FIELD_SIZE;

@@ -231,14 +231,24 @@ void Board::ProcessPressedMouse(const sf::Vector2i& mouse_pos) {
 }
 
 // for every piece in 2d array
-void Board::LocatePieceOnSurface(const uint8_t& row, const uint8_t& col) {
-	const auto& piece = pieces_indicator[row][col];
+// locate it in a proper field in alpha surface
+// and generate its occupied fields
+void Board::LocatePieceOnSurface(const uint8_t& y, const uint8_t& x) {
+	const auto& piece = pieces_indicator[y][x];
 
 	if (piece.type == PieceFlags::PieceType::EMPTY) {
 		return;
 	}
+
 	pieces_templates[int(piece.color)][int(piece.type)]->
-		DrawPiece(fields_coordinates[row][col]);
+		DrawPiece(fields_coordinates[y][x]);
+
+	SetPieceOccupiedFields(piece, y, x);
+}
+
+// set all of the piece occupied fields
+void Board::SetPieceOccupiedFields(const PieceFlags::Indicator& piece, const uint8_t& y, const uint8_t& x) {
+	pieces_templates[int(piece.color)][int(piece.type)]->MarkOccupiedFields(pieces_indicator, sf::Vector2i(x, y));
 }
 
 // focusing after clicking on a piece
@@ -447,9 +457,19 @@ void Board::EnPassantCase(const sf::Vector2i& new_move_field, const PieceFlags::
 	}
 }
 
-// update pieces on their alpha surfaces
+// update pieces on their alpha surface
+// and set occupied fields of each of the piece
+// on surface
 void Board::UpdatePiecesSurface() {
 	pieces_surface.clear(sf::Color::Color(0, 0, 0, 0));
+	
+	// zeroing occuper color for each of the fields
+	for (uint8_t i = 0; i < BOARD_SIZE; i++) {
+		for (uint8_t j = 0; j < BOARD_SIZE; j++) {
+			pieces_indicator[i][j].occuping_color.white = false;
+			pieces_indicator[i][j].occuping_color.black = false;
+		}
+	}
 
 	for (uint8_t i = 0; i < BOARD_SIZE; i++) {
 		for (uint8_t j = 0; j < BOARD_SIZE; j++) {
@@ -465,8 +485,18 @@ void Board::UpdatePiecesSurface() {
 		}
 	}
 
+	// work in progress
+	if (pieces_indicator[0][4].occuping_color.white) {
+		std::cout << "MATE BLACK" << '\n';
+	}
+
+	if (pieces_indicator[BOARD_SIZE - 1][4].occuping_color.black) {
+		std::cout << "MATE WHITE" << '\n';
+	}
+	// // // // // // 
+
 	if (show_console_board) {
-		std::cout << std::string(15, '*') << ' ' << en_passant_pos.x << ' ' << en_passant_pos.y << '\n';
+		std::cout << std::string(15, '*') << '\n';
 	}
 }
 

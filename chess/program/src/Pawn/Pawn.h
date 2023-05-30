@@ -17,6 +17,11 @@ public:
 		const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
 		const sf::Vector2i& pos);
 
+	void MarkOccupiedFields(
+		std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
+		const sf::Vector2i& pos
+	) override;
+
 	const short& GetDirection() noexcept;
 private:
 	void AvaibleMoves(

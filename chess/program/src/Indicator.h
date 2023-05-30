@@ -26,6 +26,9 @@ namespace PieceFlags {
 		// move_count has to be initialized with 0
 		uint16_t move_count;
 
-		// PieceColor active_of_color;
+		struct occuper_color_flags {
+			bool white,
+				 black;
+		} occuping_color;
 	};
 }

@@ -35,6 +35,19 @@ bool Piece::CheckFieldFreeValid(
 		pieces_indicator[pos.y][pos.x].type == PieceFlags::PieceType::EMPTY;
 }
 
+// check all the occupied fields and
+// it will be just set of active fields
+// for most of the time with some exceptions
+void Piece::MarkOccupiedFields(
+	std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
+	const sf::Vector2i& pos) {
+	const auto active_fields(GetActiveFields(pieces_indicator, pos));
+
+	for (const auto& occupied_field : active_fields) {
+		MarkSingleOccupied(pieces_indicator[occupied_field.y][occupied_field.x]);
+	}
+}
+
 // check if field is valid and if it's occupied by enemy piece
 bool Piece::CheckFieldOccupied(
 	const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
@@ -42,4 +55,14 @@ bool Piece::CheckFieldOccupied(
 	return Board::isValidField(pos) and
 		pieces_indicator[pos.y][pos.x].type != PieceFlags::PieceType::EMPTY and
 		pieces_indicator[pos.y][pos.x].color != piece_color_;
+}
+
+// set given field as occupied by color of this piece
+void Piece::MarkSingleOccupied(PieceFlags::Indicator& field) noexcept {
+	if (piece_color == PieceFlags::PieceColor::WHITE) {
+		field.occuping_color.white = true;
+	}
+	else {
+		field.occuping_color.black = true;
+	}
 }

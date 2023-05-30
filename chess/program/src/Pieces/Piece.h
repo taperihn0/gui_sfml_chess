@@ -22,6 +22,11 @@ public:
 		const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
 		const sf::Vector2i& pos, const bool& clear = true) = 0;
 
+	virtual void MarkOccupiedFields(
+		std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
+		const sf::Vector2i& pos
+	);
+
 	bool CheckFieldFreeValid(
 		const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
 		const sf::Vector2i& pos) noexcept;
@@ -32,6 +37,8 @@ public:
 
 	virtual ~Piece() = default;
 protected:
+	void MarkSingleOccupied(PieceFlags::Indicator& field) noexcept;
+
 	sf::Sprite piece_sprite;
 	std::vector<sf::Vector2i> avaible_fields;
 	

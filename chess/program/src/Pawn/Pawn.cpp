@@ -40,6 +40,26 @@ bool Pawn::CheckForUpgrade(
 }
 
 
+void Pawn::MarkOccupiedFields(
+	std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
+	const sf::Vector2i& pos) {
+	sf::Vector2i temp_vec;
+
+	// marking both diagonals of the pawn
+	temp_vec.x = pos.x - 1, temp_vec.y = pos.y + direction;
+
+	if (Board::isValidField(temp_vec)) {
+		MarkSingleOccupied(pieces_indicator[temp_vec.y][temp_vec.x]);
+	}
+
+	temp_vec.x += 2;
+	if (Board::isValidField(temp_vec)) {
+		MarkSingleOccupied(pieces_indicator[temp_vec.y][temp_vec.x]);
+	}
+}
+
+// return moving direction of the pawn - 
+// it actually depends on the color of the pawn
 const short& Pawn::GetDirection() noexcept {
 	return direction;
 }
