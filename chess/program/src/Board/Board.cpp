@@ -73,7 +73,7 @@ void Board::PreparePiecesTemplate() {
 		this, FIELD_SIZE, false);
 }
 
-// arranging starting positions of pieces for both players
+// arrang starting positions of pieces for both players
 void Board::PrepareBoard() {
 	sf::RectangleShape field(sf::Vector2f(FIELD_SIZE, FIELD_SIZE));
 	
@@ -101,7 +101,7 @@ void Board::PrepareBoard() {
 	render_board.draw(sf::Sprite(plain_board.getTexture()));
 }
 
-// Filling fields with starting postitions of pieces
+// fill fields with starting postitions of pieces
 void Board::InitBoardFields() noexcept {
 	const auto&& end_index(BOARD_SIZE - 1);
 
@@ -157,7 +157,7 @@ void Board::InitBoardFields() noexcept {
 		PieceFlags::Indicator{ PieceFlags::PieceColor::WHITE, PieceFlags::PieceType::KING, 0 };
 }
 
-// drawing a piece on his special surface
+// draw a piece on his special surface
 void Board::DrawOnPiecesSurfaceField(sf::Sprite& piece_sprite, sf::Vector2f& window_pos) {
 	piece_sprite.setPosition(window_pos);
 	pieces_surface.draw(piece_sprite);
@@ -247,7 +247,7 @@ void Board::LocatePieceOnSurface(const uint8_t& y, const uint8_t& x) {
 	SetPieceOccupiedFields(pieces_indicator, piece, y, x);
 }
 
-// focusing after clicking on a piece
+// focus after clicking on a piece
 void Board::FocusPieceField(const PieceFlags::Indicator& picked_piece, const sf::Vector2i& field_pos) {
 	
 	// drawing highlighted field under the piece
@@ -276,7 +276,7 @@ void Board::FocusPieceField(const PieceFlags::Indicator& picked_piece, const sf:
 	curr_focused_pos.y = field_pos.y, curr_focused_pos.x = field_pos.x;
 }
 
-// unfocusing after clicking exactly on a focused piece
+// unfocus after clicking exactly on a focused piece
 void Board::UnfocusPieceField(const sf::Vector2i& field_pos) {
 
 	// covering highlighted field 
@@ -334,7 +334,7 @@ void Board::MovePiece(const sf::Vector2i& new_move_field) {
 	}
 }
 
-// zeroing occuper color for each of the fields
+// zero occuper color for each of the fields
 void Board::ZeroEntireBoardOccuperColor(std::array<std::array<PieceFlags::Indicator, 8>, 8>& board) {
 	for (uint8_t i = 0; i < BOARD_SIZE; i++) {
 		for (uint8_t j = 0; j < BOARD_SIZE; j++) {
@@ -365,7 +365,7 @@ void Board::ChangePiecePos(
 		PieceFlags::Indicator{ PieceFlags::PieceColor::EMPTY, PieceFlags::PieceType::EMPTY, 0 };
 }
 
-// checking whether given coordinates are valid for my board
+// check whether given coordinates are valid for my board
 bool Board::isValidField(const sf::Vector2i& coords) noexcept {
 	return (coords.x >= 0 and coords.x < BOARD_SIZE) and
 		(coords.y >= 0 and coords.y < BOARD_SIZE);
@@ -384,7 +384,7 @@ bool Board::CheckKingAttacked(
 		.occuping_color.white;
 }
 
-// checking whether my focus flag is set
+// check whether my focus flag is set
 bool Board::isValidFocused() noexcept {
 	return curr_focused_pos.x != -1 and curr_focused_pos.y != -1;
 }
@@ -400,7 +400,7 @@ Board::CheckAndGetIfFocused(const sf::Vector2i& coords) {
 	return { false, sf::Vector2i() };
 }
 
-// checking whether given color is the same as current color of moving player
+// check whether given color is the same as current color of moving player
 bool Board::CheckCurrTurnColor(const PieceFlags::PieceColor& color) noexcept {
 	return color == static_cast<PieceFlags::PieceColor>(static_cast<int>(PieceFlags::PieceColor::BLACK) - is_white_turn);
 }
