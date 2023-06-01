@@ -4,7 +4,8 @@ Board::Board(const uint16_t& window_size, const bool& show_console_board_)
 	: light_field(sf::Color::Color(196, 164, 132)), dark_field(sf::Color::Color(128, 70, 27)),
 	highlighted_field(sf::Color::Color(240, 221, 115, 120)), upgrade_window_color(sf::Color::Color(208, 213, 219)),
 	WINDOW_SIZE(window_size), FIELD_SIZE(WINDOW_SIZE / BOARD_SIZE),
-	pieces_templates{}, pieces_indicator{}, en_passant_pos(-1, -1), curr_focused_pos(-1, -1), grid_colors{ light_field, dark_field },
+	pieces_templates{}, pieces_indicator{}, en_passant_pos(-1, -1), curr_focused_pos(-1, -1), 
+	black_king_pos(4, 0), white_king_pos(4, BOARD_SIZE - 1), grid_colors{ light_field, dark_field },
 	show_console_board(show_console_board_), is_pawn_upgrade_window(false), is_white_turn(true) {
 
 	list_of_window_pieces = {
@@ -243,12 +244,7 @@ void Board::LocatePieceOnSurface(const uint8_t& y, const uint8_t& x) {
 	pieces_templates[int(piece.color)][int(piece.type)]->
 		DrawPiece(fields_coordinates[y][x]);
 
-	SetPieceOccupiedFields(piece, y, x);
-}
-
-// set all of the piece occupied fields
-void Board::SetPieceOccupiedFields(const PieceFlags::Indicator& piece, const uint8_t& y, const uint8_t& x) {
-	pieces_templates[int(piece.color)][int(piece.type)]->MarkOccupiedFields(pieces_indicator, sf::Vector2i(x, y));
+	SetPieceOccupiedFields(pieces_indicator, piece, y, x);
 }
 
 // focusing after clicking on a piece
@@ -308,16 +304,14 @@ void Board::UnfocusPieceField(const sf::Vector2i& field_pos) {
 // move given piece to a given new field - 
 // occupy empty field or capture enemy piece there
 void Board::MovePiece(const sf::Vector2i& new_move_field) {
-	pieces_indicator[new_move_field.y][new_move_field.x] = 
-		pieces_indicator[curr_focused_pos.y][curr_focused_pos.x];
-
-	pieces_indicator[curr_focused_pos.y][curr_focused_pos.x] =
-		PieceFlags::Indicator{ PieceFlags::PieceColor::EMPTY, PieceFlags::PieceType::EMPTY, false };
+	ChangePiecePos(pieces_indicator, curr_focused_pos, new_move_field);
 
 	auto& moved_piece(pieces_indicator[new_move_field.y][new_move_field.x]);
 	moved_piece.IncrementMoveCount();
 
-	EnPassantCase(new_move_field, moved_piece);
+	if (moved_piece.type == PieceFlags::PieceType::PAWN) {
+		EnPassantCase(new_move_field, moved_piece);
+	}
 
 	ChangePlayersTurn();
 	UpdatePiecesSurface();
@@ -340,10 +334,54 @@ void Board::MovePiece(const sf::Vector2i& new_move_field) {
 	}
 }
 
+// zeroing occuper color for each of the fields
+void Board::ZeroEntireBoardOccuperColor(std::array<std::array<PieceFlags::Indicator, 8>, 8>& board) {
+	for (uint8_t i = 0; i < BOARD_SIZE; i++) {
+		for (uint8_t j = 0; j < BOARD_SIZE; j++) {
+			board[i][j].occuping_color.white = false;
+			board[i][j].occuping_color.black = false;
+		}
+	}
+}
+
+// set all of the piece occupied fields
+void Board::SetPieceOccupiedFields(
+	std::array<std::array<PieceFlags::Indicator, 8>, 8>& board,
+	const PieceFlags::Indicator& piece, const uint8_t& y, const uint8_t& x) {
+	pieces_templates[int(piece.color)][int(piece.type)]->MarkOccupiedFields(board, sf::Vector2i(x, y));
+}
+
+// move piece
+void Board::ChangePiecePos(
+	std::array<std::array<PieceFlags::Indicator, 8>, 8>& board,
+	sf::Vector2i old_pos, sf::Vector2i new_pos) noexcept {
+
+	// change position
+	board[new_pos.y][new_pos.x] =
+		board[old_pos.y][old_pos.x];
+
+	// clear his last position
+	board[old_pos.y][old_pos.x] =
+		PieceFlags::Indicator{ PieceFlags::PieceColor::EMPTY, PieceFlags::PieceType::EMPTY, 0 };
+}
+
 // checking whether given coordinates are valid for my board
 bool Board::isValidField(const sf::Vector2i& coords) noexcept {
 	return (coords.x >= 0 and coords.x < BOARD_SIZE) and
 		(coords.y >= 0 and coords.y < BOARD_SIZE);
+}
+
+// is there a mate on a king of a given color?
+bool Board::CheckKingAttacked(
+	const std::array<std::array<PieceFlags::Indicator, 8>, 8>& board, 
+	PieceFlags::PieceColor king_color) noexcept {
+	if (king_color == PieceFlags::PieceColor::WHITE) {
+		return board[int(white_king_pos.y)][int(white_king_pos.x)]
+			.occuping_color.black;
+	} 
+
+	return board[int(black_king_pos.y)][int(black_king_pos.x)]
+		.occuping_color.white;
 }
 
 // checking whether my focus flag is set
@@ -433,17 +471,15 @@ void Board::UpdateBoard() {
 // all the problems with en passant capture in one function -
 // capturing and updating current pawn which can be captured using en passant technique
 void Board::EnPassantCase(const sf::Vector2i& new_move_field, const PieceFlags::Indicator& moved_piece) {
-	if (moved_piece.type != PieceFlags::PieceType::PAWN) {
-		return;
-	}
-
-	// capturing pawn using en passant
 	const auto& d
 		= dynamic_cast<Pawn*>(pieces_templates[int(moved_piece.color)][int(moved_piece.type)].get())->
 		GetDirection();
 
-	pieces_indicator[new_move_field.y - d][new_move_field.x] =
-		PieceFlags::Indicator{ PieceFlags::PieceColor::EMPTY, PieceFlags::PieceType::EMPTY, false };
+	// capturing pawn using en passant
+	if (new_move_field.y - d == en_passant_pos.y) {
+		pieces_indicator[new_move_field.y - d][new_move_field.x] =
+			PieceFlags::Indicator{ PieceFlags::PieceColor::EMPTY, PieceFlags::PieceType::EMPTY, false };
+	}
 
 	// setting en passant position
 	const bool is_double_field_move = (moved_piece.color == PieceFlags::PieceColor::WHITE and new_move_field.y == 4) or
@@ -463,13 +499,7 @@ void Board::EnPassantCase(const sf::Vector2i& new_move_field, const PieceFlags::
 void Board::UpdatePiecesSurface() {
 	pieces_surface.clear(sf::Color::Color(0, 0, 0, 0));
 	
-	// zeroing occuper color for each of the fields
-	for (uint8_t i = 0; i < BOARD_SIZE; i++) {
-		for (uint8_t j = 0; j < BOARD_SIZE; j++) {
-			pieces_indicator[i][j].occuping_color.white = false;
-			pieces_indicator[i][j].occuping_color.black = false;
-		}
-	}
+	ZeroEntireBoardOccuperColor(pieces_indicator);
 
 	for (uint8_t i = 0; i < BOARD_SIZE; i++) {
 		for (uint8_t j = 0; j < BOARD_SIZE; j++) {
@@ -486,11 +516,11 @@ void Board::UpdatePiecesSurface() {
 	}
 
 	// work in progress
-	if (pieces_indicator[0][4].occuping_color.white) {
+	if (CheckKingAttacked(pieces_indicator, PieceFlags::PieceColor::WHITE)) {
 		std::cout << "MATE BLACK" << '\n';
 	}
 
-	if (pieces_indicator[BOARD_SIZE - 1][4].occuping_color.black) {
+	if (CheckKingAttacked(pieces_indicator, PieceFlags::PieceColor::BLACK)) {
 		std::cout << "MATE WHITE" << '\n';
 	}
 	// // // // // // 

@@ -35,16 +35,41 @@ bool Piece::CheckFieldFreeValid(
 		pieces_indicator[pos.y][pos.x].type == PieceFlags::PieceType::EMPTY;
 }
 
-// check all the occupied fields and
-// it will be just set of active fields
+// check whether given move of a piece won't cause mate - 
+// it's actually forbidden to move a piece and cause mate
+bool Piece::CheckMateSafe(
+	std::array<std::array<PieceFlags::Indicator, 8>, 8> pieces_indicator_cpy,
+	sf::Vector2i old_pos, sf::Vector2i new_pos) {
+
+	// prepare board for simulation
+	board->ZeroEntireBoardOccuperColor(pieces_indicator_cpy);
+
+	// simulation of piece's move - if the move won't cause mate on king of 
+	// same color as a moving piece, then the move is unvalid
+	// Just moving piece on a copied board and checking if king is under attack
+	board->ChangePiecePos(pieces_indicator_cpy, old_pos, new_pos);
+
+	for (uint8_t i = 0; i < 8; i++) {
+		for (uint8_t j = 0; j < 8; j++) {
+			if (pieces_indicator_cpy[i][j].type != PieceFlags::PieceType::EMPTY) {
+				board->SetPieceOccupiedFields(pieces_indicator_cpy, pieces_indicator_cpy[i][j], i, j);
+			}
+		}
+	}
+
+	return !board->CheckKingAttacked(pieces_indicator_cpy, piece_color);
+}
+
+// check all the occupied fields and it will be just set of active fields
 // for most of the time with some exceptions
+// mark them on the given board
 void Piece::MarkOccupiedFields(
-	std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
+	std::array<std::array<PieceFlags::Indicator, 8>, 8>& board,
 	const sf::Vector2i& pos) {
-	const auto active_fields(GetActiveFields(pieces_indicator, pos));
+	const auto active_fields(GetActiveFields(board, pos));
 
 	for (const auto& occupied_field : active_fields) {
-		MarkSingleOccupied(pieces_indicator[occupied_field.y][occupied_field.x]);
+		MarkSingleOccupied(board[occupied_field.y][occupied_field.x]);
 	}
 }
 
@@ -57,7 +82,7 @@ bool Piece::CheckFieldOccupied(
 		pieces_indicator[pos.y][pos.x].color != piece_color_;
 }
 
-// set given field as occupied by color of this piece
+// set an occuper color of the given field
 void Piece::MarkSingleOccupied(PieceFlags::Indicator& field) noexcept {
 	if (piece_color == PieceFlags::PieceColor::WHITE) {
 		field.occuping_color.white = true;

@@ -10,8 +10,8 @@ namespace PieceFlags {
 	};
 
 	struct Indicator {
-		// checking if piece did 
-		// exactly 'count' (0 or 1) moves in a game
+		// checking if piece did exactly 'count' (0 - no moves so far or 1 - one move) 
+		// moves in a game
 		bool CheckMove(const uint16_t& count) const noexcept {
 			return move_count == count;
 		}

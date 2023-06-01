@@ -32,8 +32,9 @@ void Game::CheckEvents(const sf::Event::EventType& type) {
 		CheckPressedMouse();
 		break;
 	}
-	default:
+	default: {
 		break;
+	}
 	}
 }
 

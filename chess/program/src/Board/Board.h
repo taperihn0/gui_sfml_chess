@@ -34,12 +34,23 @@ public:
 
 	void ProcessPressedMouse(const sf::Vector2i& mouse_pos);
 
+	void ZeroEntireBoardOccuperColor(std::array<std::array<PieceFlags::Indicator, 8>, 8>& board);
+	void SetPieceOccupiedFields(
+		std::array<std::array<PieceFlags::Indicator, 8>, 8>& board,
+		const PieceFlags::Indicator& piece, const uint8_t& y, const uint8_t& x);
+
+	void ChangePiecePos(
+		std::array<std::array<PieceFlags::Indicator, 8>, 8>& board,
+		sf::Vector2i old_pos, sf::Vector2i new_pos) noexcept;
+
 	static bool isValidField(const sf::Vector2i& coords) noexcept;
+	bool CheckKingAttacked(
+		const std::array<std::array<PieceFlags::Indicator, 8>, 8>& board,
+		PieceFlags::PieceColor king_color) noexcept;
 private:
 	struct FieldDataFlag;
 
 	void LocatePieceOnSurface(const uint8_t& y, const uint8_t& x);
-	void SetPieceOccupiedFields(const PieceFlags::Indicator& piece, const uint8_t& y, const uint8_t& x);
 
 	void FocusPieceField(const PieceFlags::Indicator& picked_piece, const sf::Vector2i& field_pos);
 	void UnfocusPieceField(const sf::Vector2i& field_pos);
@@ -73,9 +84,9 @@ private:
 	sf::RenderTexture pieces_surface;
 
 	const sf::Color light_field,
-					dark_field, 
-					highlighted_field,
-					upgrade_window_color;
+		dark_field, 
+		highlighted_field,
+		upgrade_window_color;
 
 	std::array<sf::Color, 2> grid_colors;
 
@@ -86,8 +97,9 @@ private:
 	std::array<std::array<PieceFlags::Indicator, BOARD_SIZE>, BOARD_SIZE> pieces_indicator;
 	std::array<std::array<std::unique_ptr<Piece>, 12 + 1>, 2 + 1> pieces_templates;
 
-	sf::Vector2i en_passant_pos;
-	sf::Vector2i curr_focused_pos;
+	sf::Vector2i en_passant_pos,
+		curr_focused_pos,
+		black_king_pos, white_king_pos;
 	std::vector<sf::Vector2i> active_focused_field;
 
 	std::array<PieceFlags::PieceType, 4> list_of_window_pieces;

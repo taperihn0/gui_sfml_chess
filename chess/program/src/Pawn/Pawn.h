@@ -2,8 +2,6 @@
 
 #include "..\Pieces\Piece.h"
 
-class Board;
-
 class Pawn final : public Piece {
 public:
 	Pawn(const std::string& texture_path, Board* board_ptr,
@@ -18,7 +16,7 @@ public:
 		const sf::Vector2i& pos);
 
 	void MarkOccupiedFields(
-		std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
+		std::array<std::array<PieceFlags::Indicator, 8>, 8>& board,
 		const sf::Vector2i& pos
 	) override;
 
@@ -26,11 +24,11 @@ public:
 private:
 	void AvaibleMoves(
 		const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
-		const bool& first_move_flag, sf::Vector2i& temp_vec) noexcept;
+		const bool& first_move_flag, sf::Vector2i& temp_vec, sf::Vector2i pos) noexcept;
 
 	void AvaibleCaptures(
 		const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
-		sf::Vector2i& temp_vec) noexcept;
+		sf::Vector2i& temp_vec, sf::Vector2i pos) noexcept;
 
 	void CheckAppendEnPassantCapture(
 		const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
@@ -40,11 +38,10 @@ private:
 		const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
 		const sf::Vector2i& pos) noexcept;
 
-	bool CheckOccupiedFieldPawn(
+	bool CheckEnPassantPawn(
 		const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
 		const sf::Vector2i& pos) noexcept;
 
 	const short direction;
-	uint16_t move_count;
 };
 
