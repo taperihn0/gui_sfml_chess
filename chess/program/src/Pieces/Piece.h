@@ -20,11 +20,11 @@ public:
 
 	virtual std::vector<sf::Vector2i>&& GetActiveFields(
 		const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
-		const sf::Vector2i& pos, const bool& clear = true) = 0;
+		const sf::Vector2i& pos, bool consider_mate = true, const bool& clear = true) = 0;
 
 	virtual void MarkOccupiedFields(
 		std::array<std::array<PieceFlags::Indicator, 8>, 8>& board,
-		const sf::Vector2i& pos);
+		const sf::Vector2i& pos, bool consider_mate = true);
 
 	bool CheckFieldFreeValid(
 		const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
@@ -39,6 +39,8 @@ public:
 		sf::Vector2i old_pos, sf::Vector2i new_pos);
 
 	virtual ~Piece() = default;
+
+	bool is_mate;
 protected:
 	void MarkSingleOccupied(PieceFlags::Indicator& field) noexcept;
 

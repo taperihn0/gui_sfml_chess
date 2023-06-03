@@ -35,8 +35,7 @@ bool Piece::CheckFieldFreeValid(
 		pieces_indicator[pos.y][pos.x].type == PieceFlags::PieceType::EMPTY;
 }
 
-// check whether given move of a piece won't cause mate - 
-// it's actually forbidden to move a piece and cause mate
+// check whether given move of a piece block mate
 bool Piece::CheckMateSafe(
 	std::array<std::array<PieceFlags::Indicator, 8>, 8> pieces_indicator_cpy,
 	sf::Vector2i old_pos, sf::Vector2i new_pos) {
@@ -51,8 +50,9 @@ bool Piece::CheckMateSafe(
 
 	for (uint8_t i = 0; i < 8; i++) {
 		for (uint8_t j = 0; j < 8; j++) {
-			if (pieces_indicator_cpy[i][j].type != PieceFlags::PieceType::EMPTY) {
-				board->SetPieceOccupiedFields(pieces_indicator_cpy, pieces_indicator_cpy[i][j], i, j);
+			if (pieces_indicator_cpy[i][j].type != PieceFlags::PieceType::EMPTY and
+				pieces_indicator_cpy[i][j].color != piece_color) {
+				board->SetPieceOccupiedFields(pieces_indicator_cpy, pieces_indicator_cpy[i][j], i, j, false);
 			}
 		}
 	}
@@ -65,8 +65,8 @@ bool Piece::CheckMateSafe(
 // mark them on the given board
 void Piece::MarkOccupiedFields(
 	std::array<std::array<PieceFlags::Indicator, 8>, 8>& board,
-	const sf::Vector2i& pos) {
-	const auto active_fields(GetActiveFields(board, pos));
+	const sf::Vector2i& pos, bool consider_mate) {
+	const auto active_fields(GetActiveFields(board, pos, consider_mate));
 
 	for (const auto& occupied_field : active_fields) {
 		MarkSingleOccupied(board[occupied_field.y][occupied_field.x]);

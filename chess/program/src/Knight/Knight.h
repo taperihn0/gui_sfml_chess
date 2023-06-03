@@ -9,7 +9,7 @@ public:
 
 	std::vector<sf::Vector2i>&& GetActiveFields(
 		const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
-		const sf::Vector2i& pos, const bool& clear = true) override;
+		const sf::Vector2i& pos, bool consider_mate = true, const bool& clear = true) override;
 private:
 	void AvaibleMovesCaptures(
 		const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
@@ -19,9 +19,8 @@ private:
 		const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
 		const sf::Vector2i& pos) noexcept;
 
-	struct delta_directions {
-		short d_x;
-		short d_y;
+	struct dim_directions {
+		int8_t d_x, d_y;
 	} directions;
 };
 

@@ -347,8 +347,8 @@ void Board::ZeroEntireBoardOccuperColor(std::array<std::array<PieceFlags::Indica
 // set all of the piece occupied fields
 void Board::SetPieceOccupiedFields(
 	std::array<std::array<PieceFlags::Indicator, 8>, 8>& board,
-	const PieceFlags::Indicator& piece, const uint8_t& y, const uint8_t& x) {
-	pieces_templates[int(piece.color)][int(piece.type)]->MarkOccupiedFields(board, sf::Vector2i(x, y));
+	const PieceFlags::Indicator& piece, const uint8_t& y, const uint8_t& x, bool consider_mate) {
+	pieces_templates[int(piece.color)][int(piece.type)]->MarkOccupiedFields(board, sf::Vector2i(x, y), consider_mate);
 }
 
 // move piece
@@ -432,7 +432,6 @@ void Board::OpenPawnUpgradeWindow(const sf::Vector2i& pos) {
 	}
 	
 	is_pawn_upgrade_window = true;
-
 }
 
 // process mouse click - 

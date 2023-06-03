@@ -37,7 +37,8 @@ public:
 	void ZeroEntireBoardOccuperColor(std::array<std::array<PieceFlags::Indicator, 8>, 8>& board);
 	void SetPieceOccupiedFields(
 		std::array<std::array<PieceFlags::Indicator, 8>, 8>& board,
-		const PieceFlags::Indicator& piece, const uint8_t& y, const uint8_t& x);
+		const PieceFlags::Indicator& piece, const uint8_t& y, const uint8_t& x,
+		bool consider_mate = false);
 
 	void ChangePiecePos(
 		std::array<std::array<PieceFlags::Indicator, 8>, 8>& board,
