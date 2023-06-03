@@ -40,7 +40,7 @@ bool Piece::CheckCheckSafe(
 	std::array<std::array<PieceFlags::Indicator, 8>, 8> pieces_indicator_cpy,
 	sf::Vector2i old_pos, sf::Vector2i new_pos) {
 
-	// prepare board for simulation
+	// prepare board
 	board->ZeroEntireBoardOccuperColor(pieces_indicator_cpy);
 
 	// simulation of piece's move - if the move won't cause check on king of 

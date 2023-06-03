@@ -113,4 +113,6 @@ private:
 	uint8_t upgrading_x_pos;
 
 	bool is_white_turn;
+
+	//cache memory
 };

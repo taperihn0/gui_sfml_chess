@@ -15,7 +15,11 @@ public:
 private:
 	bool CheckFieldCheckSafeValid(
 		const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
-		const sf::Vector2i& pos, sf::Vector2i old) noexcept;
+		sf::Vector2i old_pos, sf::Vector2i new_pos) noexcept;
+
+	void CheckAppendCastleMove(
+		const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
+		sf::Vector2i pos);
 	
 	struct dim_directions {
 		int8_t d_x, d_y;

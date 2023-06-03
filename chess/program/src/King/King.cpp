@@ -21,10 +21,12 @@ std::vector<sf::Vector2i>&& King::GetActiveFields(
 	for (const auto& direct : directions) {
 		const auto& new_pos(pos + sf::Vector2i(direct.d_x, direct.d_y));
 	
-		if (CheckFieldCheckSafeValid(pieces_indicator, new_pos, pos)) {
+		if (CheckFieldCheckSafeValid(pieces_indicator, pos, new_pos)) {
 			avaible_fields.push_back(new_pos);
 		}
 	}
+
+	CheckAppendCastleMove(pieces_indicator, pos);
 
 	return std::move(avaible_fields);
 }
@@ -32,12 +34,12 @@ std::vector<sf::Vector2i>&& King::GetActiveFields(
 // check whether field is safe for king
 bool King::CheckFieldCheckSafeValid(
 	const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
-	const sf::Vector2i& pos, sf::Vector2i old) noexcept {
+	sf::Vector2i old_pos, sf::Vector2i new_pos) noexcept {
 
 	// check if field is valid and can be captured
-	bool is_valid = Board::isValidField(pos) and
-		(pieces_indicator[pos.y][pos.x].type == PieceFlags::PieceType::EMPTY or
-			pieces_indicator[pos.y][pos.x].color != piece_color);
+	bool is_valid = Board::isValidField(new_pos) and
+		(pieces_indicator[new_pos.y][new_pos.x].type == PieceFlags::PieceType::EMPTY or
+			pieces_indicator[new_pos.y][new_pos.x].color != piece_color);
 
 	if (!is_valid) {
 		return false;
@@ -46,11 +48,12 @@ bool King::CheckFieldCheckSafeValid(
 		return true;
 	}
 
+	// prepare copy of current board and then generate all the occupied fields by enemy pieces
 	std::array<std::array<PieceFlags::Indicator, 8>, 8> pieces_indicator_cpy = pieces_indicator;
 
 	board->ZeroEntireBoardOccuperColor(pieces_indicator_cpy);
 
-	board->ChangePiecePos(pieces_indicator_cpy, old, pos);
+	board->ChangePiecePos(pieces_indicator_cpy, old_pos, new_pos);
 
 	for (uint8_t i = 0; i < 8; i++) {
 		for (uint8_t j = 0; j < 8; j++) {
@@ -61,10 +64,57 @@ bool King::CheckFieldCheckSafeValid(
 		}
 	}
 
-	const auto& new_field(pieces_indicator_cpy[pos.y][pos.x]);
+	// decide if the king is safe
+	const auto& new_field(pieces_indicator_cpy[new_pos.y][new_pos.x]);
 
 	if (piece_color == PieceFlags::PieceColor::WHITE) {
 		return !new_field.occuping_color.black;
 	}
 	return !new_field.occuping_color.white;
+}
+
+// check castling scenario
+// conditions: 
+// * king can't be attacked
+// * it's has to be first move of rook and king
+// * between these pieces has to be free space
+void King::CheckAppendCastleMove(
+	const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
+	sf::Vector2i pos) {
+	if (board->CheckKingAttacked(pieces_indicator, piece_color) or 
+		!pieces_indicator[pos.y][pos.x].CheckMove(0)) {
+		return;
+	}
+
+	std::cout << '.' << '\n';
+
+	// check one side
+	auto rook_field(pieces_indicator[pos.y][0]);
+
+	if (rook_field.type == PieceFlags::PieceType::ROOK and
+		rook_field.color == piece_color and rook_field.CheckMove(0)) {
+
+		for (uint8_t x = pos.x - 1; x > 0; x--) {
+			if (pieces_indicator[pos.y][x].type != PieceFlags::PieceType::EMPTY) {
+				return;
+			}
+		}
+
+		avaible_fields.push_back(sf::Vector2i(0, pos.y));
+	}
+
+	// check another side
+	rook_field = pieces_indicator[pos.y][8 - 1];
+
+	if (rook_field.type == PieceFlags::PieceType::ROOK and
+		rook_field.color == piece_color and rook_field.CheckMove(0)) {
+
+		for (uint8_t x = pos.x + 1; x < 8 - 1; x++) {
+			if (pieces_indicator[pos.y][x].type != PieceFlags::PieceType::EMPTY) {
+				return;
+			}
+		}
+
+		avaible_fields.push_back(sf::Vector2i(8 - 1, pos.y));
+	}
 }

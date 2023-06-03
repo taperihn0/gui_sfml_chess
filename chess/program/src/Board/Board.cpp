@@ -335,7 +335,7 @@ void Board::MovePiece(const sf::Vector2i& new_move_field) {
 	}
 }
 
-// zero occuper color for each of the fields
+// zero occuper color of field
 void Board::ZeroEntireBoardOccuperColor(std::array<std::array<PieceFlags::Indicator, 8>, 8>& board) {
 	for (uint8_t i = 0; i < BOARD_SIZE; i++) {
 		for (uint8_t j = 0; j < BOARD_SIZE; j++) {
@@ -513,7 +513,6 @@ void Board::EnPassantCase(const sf::Vector2i& new_move_field, const PieceFlags::
 // on surface
 void Board::UpdatePiecesSurface() {
 	pieces_surface.clear(sf::Color::Color(0, 0, 0, 0));
-	
 	ZeroEntireBoardOccuperColor(pieces_indicator);
 
 	for (uint8_t i = 0; i < BOARD_SIZE; i++) {
