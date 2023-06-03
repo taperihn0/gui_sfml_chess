@@ -28,6 +28,12 @@ void Game::CheckEvents(const sf::Event::EventType& type) {
 		window.close();
 		break;
 	}
+	case sf::Event::KeyPressed: {
+		if (sf::Keyboard::Q) {
+			window.close();
+		}
+		break;
+	}
 	case sf::Event::MouseButtonPressed: {
 		CheckPressedMouse();
 		break;

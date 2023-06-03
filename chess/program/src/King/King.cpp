@@ -16,13 +16,15 @@ std::vector<sf::Vector2i>&& King::GetActiveFields(
 		avaible_fields.clear();
 	}
 
-	//for (const auto& direct : directions) {
-	//	const auto& new_pos(pos + sf::Vector2i(direct.d_x, direct.d_y));
-	//
-	//	if (CheckFieldMateSafeValid(pieces_indicator, new_pos, pos)) {
-	//		avaible_fields.push_back(new_pos);
-	//	}
-	//}
+	is_check = consider_check;
+
+	for (const auto& direct : directions) {
+		const auto& new_pos(pos + sf::Vector2i(direct.d_x, direct.d_y));
+	
+		if (CheckFieldCheckSafeValid(pieces_indicator, new_pos, pos)) {
+			avaible_fields.push_back(new_pos);
+		}
+	}
 
 	return std::move(avaible_fields);
 }
@@ -40,16 +42,20 @@ bool King::CheckFieldCheckSafeValid(
 	if (!is_valid) {
 		return false;
 	}
+	else if (!is_check) {
+		return true;
+	}
 
-	auto pieces_indicator_cpy = pieces_indicator;
+	std::array<std::array<PieceFlags::Indicator, 8>, 8> pieces_indicator_cpy = pieces_indicator;
+
+	board->ZeroEntireBoardOccuperColor(pieces_indicator_cpy);
 
 	board->ChangePiecePos(pieces_indicator_cpy, old, pos);
 
 	for (uint8_t i = 0; i < 8; i++) {
 		for (uint8_t j = 0; j < 8; j++) {
 			if (pieces_indicator_cpy[i][j].type != PieceFlags::PieceType::EMPTY and
-				pieces_indicator_cpy[i][j].color != piece_color and
-				pieces_indicator_cpy[i][j].type != PieceFlags::PieceType::KING) {
+				pieces_indicator_cpy[i][j].color != piece_color) {
 				board->SetPieceOccupiedFields(pieces_indicator_cpy, pieces_indicator_cpy[i][j], i, j, false);
 			}
 		}

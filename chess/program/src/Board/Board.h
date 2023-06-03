@@ -63,6 +63,7 @@ private:
 	CheckAndGetIfFocused(const sf::Vector2i& coords);
 
 	bool CheckCurrTurnColor(const PieceFlags::PieceColor& color) noexcept;
+	void CheckUpdateIfKingMove(sf::Vector2i new_pos);
 
 	void OpenPawnUpgradeWindow(const sf::Vector2i& pos);
 	void PickPieceOnWindow(const sf::Vector2i& pos);
