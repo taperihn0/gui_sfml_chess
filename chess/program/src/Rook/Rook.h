@@ -13,7 +13,7 @@ public:
 
 	std::vector<sf::Vector2i>&& GetActiveFields(
 		const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
-		const sf::Vector2i& pos, bool consider_mate = true, const bool& clear = true) override;
+		const sf::Vector2i& pos, bool consider_check = true, const bool& clear = true) override;
 private:
 	void ProcessLine(const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
 		sf::Vector2i pos, const sf::Vector2i& direction) noexcept;

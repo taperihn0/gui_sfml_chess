@@ -11,26 +11,26 @@ King::King(const std::string& texture_path, Board* board_ptr,
 // controlled by enemy
 std::vector<sf::Vector2i>&& King::GetActiveFields(
 	const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
-	const sf::Vector2i& pos, bool consider_mate, const bool& clear) {
+	const sf::Vector2i& pos, bool consider_check, const bool& clear) {
 	if (clear) {
 		avaible_fields.clear();
 	}
 
-	for (const auto& direct : directions) {
-		const auto& new_pos(pos + sf::Vector2i(direct.d_x, direct.d_y));
-	
-		if (CheckFieldMateSafeValid(pieces_indicator, new_pos)) {
-			avaible_fields.push_back(new_pos);
-		}
-	}
+	//for (const auto& direct : directions) {
+	//	const auto& new_pos(pos + sf::Vector2i(direct.d_x, direct.d_y));
+	//
+	//	if (CheckFieldMateSafeValid(pieces_indicator, new_pos, pos)) {
+	//		avaible_fields.push_back(new_pos);
+	//	}
+	//}
 
 	return std::move(avaible_fields);
 }
 
 // check whether field is safe for king
-bool King::CheckFieldMateSafeValid(
+bool King::CheckFieldCheckSafeValid(
 	const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
-	const sf::Vector2i& pos) noexcept {
+	const sf::Vector2i& pos, sf::Vector2i old) noexcept {
 
 	// check if field is valid and can be captured
 	bool is_valid = Board::isValidField(pos) and
@@ -40,9 +40,22 @@ bool King::CheckFieldMateSafeValid(
 	if (!is_valid) {
 		return false;
 	}
-	
-	// check if field is not occupied by enemy pawn
-	const auto& new_field(pieces_indicator[pos.y][pos.x]);
+
+	auto pieces_indicator_cpy = pieces_indicator;
+
+	board->ChangePiecePos(pieces_indicator_cpy, old, pos);
+
+	for (uint8_t i = 0; i < 8; i++) {
+		for (uint8_t j = 0; j < 8; j++) {
+			if (pieces_indicator_cpy[i][j].type != PieceFlags::PieceType::EMPTY and
+				pieces_indicator_cpy[i][j].color != piece_color and
+				pieces_indicator_cpy[i][j].type != PieceFlags::PieceType::KING) {
+				board->SetPieceOccupiedFields(pieces_indicator_cpy, pieces_indicator_cpy[i][j], i, j, false);
+			}
+		}
+	}
+
+	const auto& new_field(pieces_indicator_cpy[pos.y][pos.x]);
 
 	if (piece_color == PieceFlags::PieceColor::WHITE) {
 		return !new_field.occuping_color.black;

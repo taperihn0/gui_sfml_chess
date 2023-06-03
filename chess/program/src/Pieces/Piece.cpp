@@ -35,15 +35,15 @@ bool Piece::CheckFieldFreeValid(
 		pieces_indicator[pos.y][pos.x].type == PieceFlags::PieceType::EMPTY;
 }
 
-// check whether given move of a piece block mate
-bool Piece::CheckMateSafe(
+// check whether given move of a piece block check
+bool Piece::CheckCheckSafe(
 	std::array<std::array<PieceFlags::Indicator, 8>, 8> pieces_indicator_cpy,
 	sf::Vector2i old_pos, sf::Vector2i new_pos) {
 
 	// prepare board for simulation
 	board->ZeroEntireBoardOccuperColor(pieces_indicator_cpy);
 
-	// simulation of piece's move - if the move won't cause mate on king of 
+	// simulation of piece's move - if the move won't cause check on king of 
 	// same color as a moving piece, then the move is unvalid
 	// Just moving piece on a copied board and checking if king is under attack
 	board->ChangePiecePos(pieces_indicator_cpy, old_pos, new_pos);
@@ -65,8 +65,8 @@ bool Piece::CheckMateSafe(
 // mark them on the given board
 void Piece::MarkOccupiedFields(
 	std::array<std::array<PieceFlags::Indicator, 8>, 8>& board,
-	const sf::Vector2i& pos, bool consider_mate) {
-	const auto active_fields(GetActiveFields(board, pos, consider_mate));
+	const sf::Vector2i& pos, bool consider_check) {
+	const auto active_fields(GetActiveFields(board, pos, consider_check));
 
 	for (const auto& occupied_field : active_fields) {
 		MarkSingleOccupied(board[occupied_field.y][occupied_field.x]);

@@ -9,12 +9,12 @@ Bishop::Bishop(const std::string& texture_path, Board* board_ptr,
 // return avaible fields of bishop - just diagonals fields
 std::vector<sf::Vector2i>&& Bishop::GetActiveFields(
 	const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
-	const sf::Vector2i& pos, bool consider_mate, const bool& clear) {
+	const sf::Vector2i& pos, bool consider_check, const bool& clear) {
 	if (clear) {
 		avaible_fields.clear();
 	}
 
-	is_mate = consider_mate;
+	is_check = consider_check;
 
 	// go through diagonals and break when another piece
 	// appear or when end of board
@@ -35,13 +35,13 @@ void Bishop::ProcessDiagonal(
 	sf::Vector2i temp_vec(pos + direction);
 
 	while (CheckFieldFreeValid(pieces_indicator, temp_vec) and 
-		(!is_mate or CheckMateSafe(pieces_indicator, pos, temp_vec))) {
+		(!is_check or CheckCheckSafe(pieces_indicator, pos, temp_vec))) {
 		avaible_fields.push_back(temp_vec);
 		temp_vec += direction;
 	}
 
 	if (CheckFieldOccupied(pieces_indicator, temp_vec, piece_color) and
-		(!is_mate or CheckMateSafe(pieces_indicator, pos, temp_vec))) {
+		(!is_check or CheckCheckSafe(pieces_indicator, pos, temp_vec))) {
 		avaible_fields.push_back(temp_vec);
 	}
 }

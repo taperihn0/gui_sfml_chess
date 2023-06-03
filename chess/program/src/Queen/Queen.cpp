@@ -12,13 +12,13 @@ Queen::Queen(const std::string& texture_path, Board* board_ptr,
 // mix of rook and bishop
 std::vector<sf::Vector2i>&& Queen::GetActiveFields(
 	const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
-	const sf::Vector2i& pos, bool consider_mate, const bool& clear) {
+	const sf::Vector2i& pos, bool consider_check, const bool& clear) {
 	if (clear) {
 		avaible_fields.clear();
 	}
 
-	Bishop::GetActiveFields(pieces_indicator, pos, consider_mate, false);
-	Rook::GetActiveFields(pieces_indicator, pos, consider_mate, false);
+	Bishop::GetActiveFields(pieces_indicator, pos, consider_check, false);
+	Rook::GetActiveFields(pieces_indicator, pos, consider_check, false);
 
 	return std::move(avaible_fields);
 }

@@ -378,8 +378,7 @@ bool Board::CheckKingAttacked(
 	if (king_color == PieceFlags::PieceColor::WHITE) {
 		return board[int(white_king_pos.y)][int(white_king_pos.x)]
 			.occuping_color.black;
-	} 
-
+	}
 	return board[int(black_king_pos.y)][int(black_king_pos.x)]
 		.occuping_color.white;
 }

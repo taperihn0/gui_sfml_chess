@@ -11,12 +11,12 @@ Rook::Rook(const std::string& texture_path, Board* board_ptr,
 // some kind of straight lines
 std::vector<sf::Vector2i>&& Rook::GetActiveFields(
 	const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
-	const sf::Vector2i& pos, bool consider_mate, const bool& clear) {
+	const sf::Vector2i& pos, bool consider_check, const bool& clear) {
 	if (clear) {
 		avaible_fields.clear();
 	}
 
-	is_mate = consider_mate;
+	is_check = consider_check;
 
 	for (const auto& direct : directions) {
 		ProcessLine(pieces_indicator, pos, sf::Vector2i(direct.d_x, direct.d_y));
@@ -33,13 +33,13 @@ void Rook::ProcessLine(
 	sf::Vector2i temp_vec(pos + direction);
 
 	while (CheckFieldFreeValid(pieces_indicator, temp_vec) and
-		(!is_mate or CheckMateSafe(pieces_indicator, pos, temp_vec))) {
+		(!is_check or CheckCheckSafe(pieces_indicator, pos, temp_vec))) {
 		avaible_fields.push_back(temp_vec);
 		temp_vec += direction;
 	}
 
 	if (CheckFieldOccupied(pieces_indicator, temp_vec, piece_color) and
-		(!is_mate or CheckMateSafe(pieces_indicator, pos, temp_vec))) {
+		(!is_check or CheckCheckSafe(pieces_indicator, pos, temp_vec))) {
 		avaible_fields.push_back(temp_vec);
 	}
 }

@@ -11,14 +11,14 @@ Pawn::Pawn(const std::string& texture_path, Board* board_ptr,
 // of the pawn and diagonal fields if capture is avaible
 std::vector<sf::Vector2i>&& Pawn::GetActiveFields(
 	const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
-	const sf::Vector2i& pos, bool consider_mate, const bool& clear) {
+	const sf::Vector2i& pos, bool consider_check, const bool& clear) {
 	if (clear) {
 		avaible_fields.clear();
 	}
 
 	sf::Vector2i temp_vec;
 
-	is_mate = consider_mate;
+	is_check = consider_check;
 
 	// append avaible moves of a piece without capturing
 	temp_vec.x = pos.x, temp_vec.y = pos.y + direction;
@@ -34,7 +34,7 @@ std::vector<sf::Vector2i>&& Pawn::GetActiveFields(
 	return std::move(avaible_fields);
 }
 
-// checking whether pawn can be upgraded (standing on the last line)
+// check whether pawn can be upgraded (standing on the last line)
 bool Pawn::CheckForUpgrade(
 	const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
 	const sf::Vector2i& pos) {
@@ -45,7 +45,7 @@ bool Pawn::CheckForUpgrade(
 // mark occupied fields of pawn (both diagonals)
 void Pawn::MarkOccupiedFields(
 	std::array<std::array<PieceFlags::Indicator, 8>, 8>& board,
-	const sf::Vector2i& pos, bool consider_mate) {
+	const sf::Vector2i& pos, bool consider_check) {
 
 	sf::Vector2i temp_vec;
 
@@ -75,13 +75,13 @@ void Pawn::AvaibleMoves(
 		return;
 	}
 
-	if (!is_mate or CheckMateSafe(pieces_indicator, pos, temp_vec)) {
+	if (!is_check or CheckCheckSafe(pieces_indicator, pos, temp_vec)) {
 		avaible_fields.push_back(temp_vec);
 	}
 
 	temp_vec.y += direction;
 	if (first_move_flag and CheckFieldFreeValid(pieces_indicator, temp_vec) and
-		(!is_mate or CheckMateSafe(pieces_indicator, pos, temp_vec))) {
+		(!is_check or CheckCheckSafe(pieces_indicator, pos, temp_vec))) {
 		avaible_fields.push_back(temp_vec);
 	}
 }
@@ -92,13 +92,13 @@ void Pawn::AvaibleCaptures(
 	const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
 	sf::Vector2i& temp_vec, sf::Vector2i pos) noexcept {
 	if (CheckCaptureField(pieces_indicator, temp_vec) and 
-		(!is_mate or CheckMateSafe(pieces_indicator, pos, temp_vec))) {
+		(!is_check or CheckCheckSafe(pieces_indicator, pos, temp_vec))) {
 		avaible_fields.push_back(temp_vec);
 	}
 
 	temp_vec.x += 2;
 	if (CheckCaptureField(pieces_indicator, temp_vec) and
-		(!is_mate or CheckMateSafe(pieces_indicator, pos, temp_vec))) {
+		(!is_check or CheckCheckSafe(pieces_indicator, pos, temp_vec))) {
 		avaible_fields.push_back(temp_vec);
 	}
 }
@@ -117,14 +117,14 @@ void Pawn::CheckAppendEnPassantCapture(
 	// first side
 	temp_vec.x = pos.x - 1, temp_vec.y = pos.y;
 	if (green_flag and CheckEnPassantPawn(pieces_indicator, temp_vec) and
-		(!is_mate or CheckMateSafe(pieces_indicator, pos, temp_vec))) {
+		(!is_check or CheckCheckSafe(pieces_indicator, pos, temp_vec))) {
 		avaible_fields.push_back(temp_vec + sf::Vector2i(0, direction));
 	}
 
 	// second side
 	temp_vec.x += 2;
 	if (green_flag and CheckEnPassantPawn(pieces_indicator, temp_vec) and
-		(!is_mate or CheckMateSafe(pieces_indicator, pos, temp_vec))) {
+		(!is_check or CheckCheckSafe(pieces_indicator, pos, temp_vec))) {
 		avaible_fields.push_back(temp_vec + sf::Vector2i(0, direction));
 	}
 }
