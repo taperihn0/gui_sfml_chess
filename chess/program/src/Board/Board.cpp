@@ -6,7 +6,8 @@ Board::Board(const uint16_t& window_size, const bool& show_console_board_)
 	WINDOW_SIZE(window_size), FIELD_SIZE(WINDOW_SIZE / BOARD_SIZE),
 	pieces_templates{}, pieces_indicator{}, en_passant_pos(-1, -1), curr_focused_pos(-1, -1), 
 	black_king_pos(4, 0), white_king_pos(4, BOARD_SIZE - 1), grid_colors{ light_field, dark_field },
-	show_console_board(show_console_board_), is_pawn_upgrade_window(false), is_white_turn(true) {
+	show_console_board(show_console_board_), is_pawn_upgrade_window(false), is_white_turn(true), 
+	possible_moves(UINT16_MAX) {
 
 	list_of_window_pieces = {
 		PieceFlags::PieceType::QUEEN,
@@ -99,6 +100,8 @@ void Board::PrepareBoard() {
 	}
 
 	render_board.draw(sf::Sprite(plain_board.getTexture()));
+
+	possible_moves = PreGenerateAllMoves();
 }
 
 // fill fields with starting postitions of pieces
@@ -194,13 +197,10 @@ void Board::ProcessPressedMouse(const sf::Vector2i& mouse_pos) {
 		return;
 	}
 
-	// process mouse pressing by focusing a piece,
-	// unfocus it or move a piece
-
 	// variable for moving scenario
-	const auto&& move_field(CheckAndGetIfFocused(field_pos));
+	const auto move_field(CheckAndGetIfFocused(field_pos));
 
-	const auto& picked_piece(pieces_indicator[field_pos.y][field_pos.x]);
+	const auto picked_piece(pieces_indicator[field_pos.y][field_pos.x]);
 	const bool is_focus_flag(isValidFocused());
 	
 	// if whites' turn, then focus only white pieces
@@ -215,6 +215,8 @@ void Board::ProcessPressedMouse(const sf::Vector2i& mouse_pos) {
 
 	const bool is_turn_color(CheckCurrTurnColor(picked_piece.color));
 
+	// process mouse pressing by focusing a piece,
+	// unfocus it or move a piece
 	if (!is_focus_flag and picked_piece.type != PieceFlags::PieceType::EMPTY and
 		is_turn_color) {
 		FocusPieceField(picked_piece, field_pos);
@@ -247,6 +249,31 @@ void Board::LocatePieceOnSurface(const uint8_t& y, const uint8_t& x) {
 	SetPieceOccupiedFields(pieces_indicator, piece, y, x);
 }
 
+
+uint16_t Board::PreGenerateAllMoves() {
+	uint8_t turn_color(2 - is_white_turn);
+	PieceFlags::Indicator piece;
+	uint16_t moves_number = 0;
+
+	for (uint8_t i = 0; i < BOARD_SIZE; i++) {
+		for (uint8_t j = 0; j < BOARD_SIZE; j++) {
+			piece = pieces_indicator[i][j];
+
+			if (piece.type != PieceFlags::PieceType::EMPTY and
+				piece.color == static_cast<PieceFlags::PieceColor>(turn_color)) {
+				std::vector<sf::Vector2i> avaible_fields = 
+					pieces_templates[static_cast<int>(piece.color)][static_cast<int>(piece.type)]->
+					GetActiveFields(pieces_indicator, sf::Vector2i(j, i));
+
+				moves_number += static_cast<uint16_t>(avaible_fields.size());
+				cache[i][j] = std::move(avaible_fields);
+			}
+		}
+	}
+
+	return moves_number;
+}
+
 // focus after clicking on a piece
 void Board::FocusPieceField(const PieceFlags::Indicator& picked_piece, const sf::Vector2i& field_pos) {
 	
@@ -259,12 +286,8 @@ void Board::FocusPieceField(const PieceFlags::Indicator& picked_piece, const sf:
 
 	plain_board.draw(field);
 
-	// cache[static_cast<int>(piece.color)][static_cast<int>(piece.type)] ...
-
-	// preparing his active fields and then drawing them
-	active_focused_field =
-		pieces_templates[static_cast<int>(picked_piece.color)][static_cast<int>(picked_piece.type)]->
-			GetActiveFields(pieces_indicator, field_pos);
+	// preparing its active fields and then drawing them
+	active_focused_field = cache[field_pos.y][field_pos.x];
 	
 	for (const auto& active_field : active_focused_field) {
 		window_field_pos = fields_coordinates[active_field.y][active_field.x];
@@ -347,6 +370,8 @@ void Board::MovePiece(const sf::Vector2i& new_move_field) {
 	if (is_upgrade) {
 		OpenPawnUpgradeWindow(new_move_field);
 	}
+
+	possible_moves = PreGenerateAllMoves();
 }
 
 // zero occuper color of field
@@ -395,6 +420,29 @@ bool Board::CheckKingAttacked(
 	}
 	return board[static_cast<int>(black_king_pos.y)][static_cast<int>(black_king_pos.x)]
 		.occuping_color.white;
+}
+
+
+bool Board::CheckForMateStealMate() {
+	if (possible_moves != 0) {
+		return false;
+	}
+
+	const bool is_king_attacked = is_white_turn?
+		CheckKingAttacked(pieces_indicator, PieceFlags::PieceColor::WHITE) : 
+		CheckKingAttacked(pieces_indicator, PieceFlags::PieceColor::BLACK);
+		
+	if (is_white_turn and is_king_attacked) {
+		std::cout << "BLACK WON - by checkmate" << '\n';
+	}
+	else if (!is_white_turn and is_king_attacked) {
+		std::cout << "WHITE WON - by checkmate" << '\n';
+	}
+	else if (!is_king_attacked) {
+		std::cout << "TIE - stealmate" << '\n';
+	}
+
+	return true;
 }
 
 // check whether my focus flag is set

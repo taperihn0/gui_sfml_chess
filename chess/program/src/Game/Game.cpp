@@ -7,6 +7,12 @@ Game::Game(const sf::VideoMode& window_video_mode, const sf::String& window_titl
 
 // start game process - main game loop
 void Game::RunGame() {
+	if (!window_image.loadFromFile("./program/resource/king_window_icon.png")) {
+		exit(3);
+	}
+
+	window.setIcon(window_image.getSize().x, window_image.getSize().y, window_image.getPixelsPtr());
+
 	sf::Event processed_event;
 	board.PreparePiecesTemplate();
 	board.PrepareBoard();
@@ -15,7 +21,10 @@ void Game::RunGame() {
 		window.draw(board.GetBoardSprite());
 		window.display();
 
-		if (window.waitEvent(processed_event)) {
+		if (board.CheckForMateStealMate()) {
+			window.close();
+		}
+		else if (window.waitEvent(processed_event)) {
 			CheckEvents(processed_event.type);
 		}
 	}

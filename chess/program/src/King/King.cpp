@@ -146,4 +146,3 @@ bool King::CheckFieldOccuped(PieceFlags::Indicator field) {
 	}
 	return field.occuping_color.white;
 }
-

@@ -13,6 +13,7 @@ private:
 	void CheckPressedMouse();
 
 	sf::RenderWindow window;
+	sf::Image window_image;
 	Board board;
 
 	sf::Vector2i mouse_pos;

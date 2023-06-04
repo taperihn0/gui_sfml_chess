@@ -1,11 +1,11 @@
 #pragma once
 
 namespace PieceFlags {
-	enum class PieceType {
+	enum class PieceType: uint8_t {
 		EMPTY = 0, PAWN, BISHOP, KNIGHT, ROOK, QUEEN, KING
 	};
 
-	enum class PieceColor {
+	enum class PieceColor: uint8_t {
 		EMPTY = 0, WHITE, BLACK
 	};
 

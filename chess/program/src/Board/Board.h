@@ -17,7 +17,6 @@
 #include <memory>
 #include <vector>
 #include <algorithm>
-#include <unordered_map>
 
 class Board {
 public:
@@ -49,10 +48,14 @@ public:
 	bool CheckKingAttacked(
 		const std::array<std::array<PieceFlags::Indicator, 8>, 8>& board,
 		PieceFlags::PieceColor king_color) noexcept;
+
+	bool CheckForMateStealMate();
 private:
 	struct FieldDataFlag;
 
 	void LocatePieceOnSurface(const uint8_t& y, const uint8_t& x);
+
+	uint16_t PreGenerateAllMoves();
 
 	void FocusPieceField(const PieceFlags::Indicator& picked_piece, const sf::Vector2i& field_pos);
 	void UnfocusPieceField(const sf::Vector2i& field_pos);
@@ -116,6 +119,6 @@ private:
 
 	bool is_white_turn;
 
-	//cache memory
-	//std::unordered_map<int, std::unordered_map<int, std::vector<sf::Vector2i>>> cache;
+	std::array<std::array<std::vector<sf::Vector2i>, BOARD_SIZE>, BOARD_SIZE> cache;
+	uint16_t possible_moves;
 };
