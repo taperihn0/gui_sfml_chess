@@ -17,9 +17,10 @@ std::vector<sf::Vector2i>&& King::GetActiveFields(
 	}
 
 	is_check = consider_check;
+	sf::Vector2i new_pos;
 
 	for (const auto& direct : directions) {
-		const auto& new_pos(pos + sf::Vector2i(direct.d_x, direct.d_y));
+		new_pos = pos + sf::Vector2i(direct.d_x, direct.d_y);
 	
 		if (CheckFieldCheckSafeValid(pieces_indicator, pos, new_pos)) {
 			avaible_fields.push_back(new_pos);
@@ -27,11 +28,26 @@ std::vector<sf::Vector2i>&& King::GetActiveFields(
 	}
 
 	CheckAppendCastleMove(pieces_indicator, pos);
-
 	return std::move(avaible_fields);
 }
 
-// check whether field is safe for king
+
+void King::MarkOccupiedFields(
+	std::array<std::array<PieceFlags::Indicator, 8>, 8>& board,
+	const sf::Vector2i& pos, bool consider_check) {
+	is_check = consider_check;
+	sf::Vector2i new_pos;
+
+	for (const auto& direct : directions) {
+		new_pos = pos + sf::Vector2i(direct.d_x, direct.d_y);
+
+		if (CheckFieldCheckSafeValid(board, pos, new_pos)) {
+			MarkSingleOccupied(board[new_pos.y][new_pos.x]);
+		}
+	}
+}
+
+// check whether new field is safe for king
 bool King::CheckFieldCheckSafeValid(
 	const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
 	sf::Vector2i old_pos, sf::Vector2i new_pos) noexcept {
@@ -86,21 +102,24 @@ void King::CheckAppendCastleMove(
 		return;
 	}
 
-	std::cout << '.' << '\n';
-
 	// check one side
 	auto rook_field(pieces_indicator[pos.y][0]);
+	bool castle_flag(true);
 
 	if (rook_field.type == PieceFlags::PieceType::ROOK and
 		rook_field.color == piece_color and rook_field.CheckMove(0)) {
 
 		for (uint8_t x = pos.x - 1; x > 0; x--) {
-			if (pieces_indicator[pos.y][x].type != PieceFlags::PieceType::EMPTY) {
-				return;
+			if (pieces_indicator[pos.y][x].type != PieceFlags::PieceType::EMPTY or
+				CheckFieldOccuped(pieces_indicator[pos.y][x])) {
+				castle_flag = false;
+				break;
 			}
 		}
 
-		avaible_fields.push_back(sf::Vector2i(0, pos.y));
+		if (castle_flag) {
+			avaible_fields.push_back(sf::Vector2i(0, pos.y));
+		}
 	}
 
 	// check another side
@@ -110,7 +129,8 @@ void King::CheckAppendCastleMove(
 		rook_field.color == piece_color and rook_field.CheckMove(0)) {
 
 		for (uint8_t x = pos.x + 1; x < 8 - 1; x++) {
-			if (pieces_indicator[pos.y][x].type != PieceFlags::PieceType::EMPTY) {
+			if (pieces_indicator[pos.y][x].type != PieceFlags::PieceType::EMPTY or
+				CheckFieldOccuped(pieces_indicator[pos.y][x])) {
 				return;
 			}
 		}
@@ -118,3 +138,12 @@ void King::CheckAppendCastleMove(
 		avaible_fields.push_back(sf::Vector2i(8 - 1, pos.y));
 	}
 }
+
+
+bool King::CheckFieldOccuped(PieceFlags::Indicator field) {
+	if (piece_color == PieceFlags::PieceColor::WHITE) {
+		return field.occuping_color.black;
+	}
+	return field.occuping_color.white;
+}
+

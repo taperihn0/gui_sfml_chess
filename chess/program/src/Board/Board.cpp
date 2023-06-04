@@ -259,6 +259,8 @@ void Board::FocusPieceField(const PieceFlags::Indicator& picked_piece, const sf:
 
 	plain_board.draw(field);
 
+	// cache[static_cast<int>(piece.color)][static_cast<int>(piece.type)] ...
+
 	// preparing his active fields and then drawing them
 	active_focused_field =
 		pieces_templates[static_cast<int>(picked_piece.color)][static_cast<int>(picked_piece.type)]->
@@ -304,11 +306,23 @@ void Board::UnfocusPieceField(const sf::Vector2i& field_pos) {
 // move given piece to a given new field - 
 // occupy empty field or capture enemy piece there
 void Board::MovePiece(const sf::Vector2i& new_move_field) {
-	ChangePiecePos(pieces_indicator, curr_focused_pos, new_move_field);
+	auto moved_piece(pieces_indicator[curr_focused_pos.y][curr_focused_pos.x]),
+	    old_piece(pieces_indicator[new_move_field.y][new_move_field.x]);
+	
+	// checking for castling action
+	if (moved_piece.type == PieceFlags::PieceType::KING and
+		old_piece.type == PieceFlags::PieceType::ROOK and
+		old_piece.color == moved_piece.color) {
+		CastleKingChange(curr_focused_pos, new_move_field);
+	}
+	else {
+		ChangePiecePos(pieces_indicator, curr_focused_pos, new_move_field);
+	}
+
 	CheckUpdateIfKingMove(new_move_field);
 
-	auto& moved_piece(pieces_indicator[new_move_field.y][new_move_field.x]);
-	moved_piece.IncrementMoveCount();
+	pieces_indicator[new_move_field.y][new_move_field.x].IncrementMoveCount();
+	moved_piece = pieces_indicator[new_move_field.y][new_move_field.x];
 
 	if (moved_piece.type == PieceFlags::PieceType::PAWN) {
 		EnPassantCase(new_move_field, moved_piece);
@@ -352,7 +366,6 @@ void Board::SetPieceOccupiedFields(
 	pieces_templates[static_cast<int>(piece.color)][static_cast<int>(piece.type)]->MarkOccupiedFields(board, sf::Vector2i(x, y), consider_mate);
 }
 
-// move piece
 void Board::ChangePiecePos(
 	std::array<std::array<PieceFlags::Indicator, 8>, 8>& board,
 	sf::Vector2i old_pos, sf::Vector2i new_pos) noexcept {
@@ -550,6 +563,20 @@ void Board::UpdatePiecesSurface() {
 // whose is turn now
 void Board::ChangePlayersTurn() noexcept {
 	is_white_turn = !is_white_turn;
+}
+
+
+void Board::CastleKingChange(sf::Vector2i old_pos, sf::Vector2i new_pos) {
+	ChangePiecePos(pieces_indicator, old_pos, new_pos);
+	
+	if (new_pos.x == 0) {
+		pieces_indicator[new_pos.y][3] =
+			PieceFlags::Indicator{ pieces_indicator[new_pos.y][new_pos.x].color, PieceFlags::PieceType::ROOK };
+	}
+	else {
+		pieces_indicator[new_pos.y][5] = 
+			PieceFlags::Indicator{ pieces_indicator[new_pos.y][new_pos.x].color, PieceFlags::PieceType::ROOK };
+	}
 }
 
 // reset current en passant position

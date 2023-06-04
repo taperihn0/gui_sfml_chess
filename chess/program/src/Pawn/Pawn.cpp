@@ -46,7 +46,7 @@ bool Pawn::CheckForUpgrade(
 void Pawn::MarkOccupiedFields(
 	std::array<std::array<PieceFlags::Indicator, 8>, 8>& board,
 	const sf::Vector2i& pos, bool consider_check) {
-
+	is_check = consider_check;
 	sf::Vector2i temp_vec;
 
 	// marking both diagonals of the pawn

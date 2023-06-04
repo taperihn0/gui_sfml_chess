@@ -17,6 +17,7 @@
 #include <memory>
 #include <vector>
 #include <algorithm>
+#include <unordered_map>
 
 class Board {
 public:
@@ -73,6 +74,7 @@ private:
 	void EnPassantCase(const sf::Vector2i& new_move_field, const PieceFlags::Indicator& moved_piece);
 	void UpdatePiecesSurface();
 	void ChangePlayersTurn() noexcept;
+	void CastleKingChange(sf::Vector2i old_pos, sf::Vector2i new_pos);
 
 	void SetEnPassantPos(const int& x, const int& y) noexcept;
 
@@ -115,4 +117,5 @@ private:
 	bool is_white_turn;
 
 	//cache memory
+	//std::unordered_map<int, std::unordered_map<int, std::vector<sf::Vector2i>>> cache;
 };
