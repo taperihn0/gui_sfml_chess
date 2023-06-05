@@ -3,7 +3,8 @@
 
 Piece::Piece(const std::string& texture_path, Board* board_ptr,
 	const uint16_t& size, const PieceFlags::PieceColor& piece_color_)
-	: board(board_ptr), piece_color(piece_color_), piece_texture_path(texture_path),
+	: board(board_ptr), piece_color(piece_color_), 
+	piece_texture_path(texture_path),
 	piece_texture_ptr(std::make_unique<sf::Texture>()) {
 	PreparePieceTexture(size);
 }
@@ -40,13 +41,12 @@ bool Piece::CheckCheckSafe(
 	std::array<std::array<PieceFlags::Indicator, 8>, 8> pieces_indicator_cpy,
 	sf::Vector2i old_pos, sf::Vector2i new_pos) {
 
-	// prepare board
 	board->ZeroEntireBoardOccuperColor(pieces_indicator_cpy);
 
 	// simulation of piece's move - if the move won't cause check on king of 
 	// same color as a moving piece, then the move is unvalid
 	// Just moving piece on a copied board and checking if king is under attack
-	board->ChangePiecePos(pieces_indicator_cpy, old_pos, new_pos);
+	board->ChangePiecePos(pieces_indicator_cpy, old_pos, new_pos, false);
 
 	for (uint8_t i = 0; i < 8; i++) {
 		for (uint8_t j = 0; j < 8; j++) {

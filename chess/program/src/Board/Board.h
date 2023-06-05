@@ -1,6 +1,7 @@
 #pragma once
 
 #include <SFML\Graphics.hpp>
+#include <SFML\Audio.hpp>
 
 #include "..\Indicator.h"
 #include "..\Pawn\Pawn.h"
@@ -21,9 +22,9 @@
 class Board {
 public:
 	Board(const uint16_t& window_size, const bool& show_console_board_);
-	void PreparePiecesTemplate();
 	void PrepareBoard();
-	void InitBoardFields() noexcept;
+
+	sf::SoundSource::Status SoundStatus();
 
 	void DrawOnPiecesSurfaceField(sf::Sprite& piece_sprite, sf::Vector2f& window_pos);
 
@@ -42,7 +43,7 @@ public:
 
 	void ChangePiecePos(
 		std::array<std::array<PieceFlags::Indicator, 8>, 8>& board,
-		sf::Vector2i old_pos, sf::Vector2i new_pos) noexcept;
+		sf::Vector2i old_pos, sf::Vector2i new_pos, bool play_sound = true) noexcept;
 
 	static bool isValidField(const sf::Vector2i& coords) noexcept;
 	bool CheckKingAttacked(
@@ -52,6 +53,10 @@ public:
 	bool CheckForMateStealMate();
 private:
 	struct FieldDataFlag;
+
+	void InitBoardFields() noexcept;
+	void PreparePiecesTemplate();
+	void PrepareAudio();
 
 	void LocatePieceOnSurface(const uint8_t& y, const uint8_t& x);
 
@@ -121,4 +126,17 @@ private:
 
 	std::array<std::array<std::vector<sf::Vector2i>, BOARD_SIZE>, BOARD_SIZE> cache;
 	uint16_t possible_moves;
+
+	struct Audio {
+		sf::Sound move,
+			capture,
+			castle,
+			game_end,
+			check,
+			promote;
+	} sounds;
+
+	std::array<std::unique_ptr<sf::SoundBuffer>, 6> sbuffers;
+	sf::Sound turn_sound;
+	bool is_turn_sound;
 };

@@ -1,13 +1,23 @@
 #include "Board.h"
 
 Board::Board(const uint16_t& window_size, const bool& show_console_board_)
-	: light_field(sf::Color::Color(196, 164, 132)), dark_field(sf::Color::Color(128, 70, 27)),
-	highlighted_field(sf::Color::Color(240, 221, 115, 120)), upgrade_window_color(sf::Color::Color(208, 213, 219)),
-	WINDOW_SIZE(window_size), FIELD_SIZE(WINDOW_SIZE / BOARD_SIZE),
-	pieces_templates{}, pieces_indicator{}, en_passant_pos(-1, -1), curr_focused_pos(-1, -1), 
-	black_king_pos(4, 0), white_king_pos(4, BOARD_SIZE - 1), grid_colors{ light_field, dark_field },
-	show_console_board(show_console_board_), is_pawn_upgrade_window(false), is_white_turn(true), 
-	possible_moves(UINT16_MAX) {
+	: light_field(sf::Color::Color(196, 164, 132)), 
+	dark_field(sf::Color::Color(128, 70, 27)),
+	highlighted_field(sf::Color::Color(240, 221, 115, 120)), 
+	upgrade_window_color(sf::Color::Color(208, 213, 219)),
+	WINDOW_SIZE(window_size), 
+	FIELD_SIZE(WINDOW_SIZE / BOARD_SIZE),
+	pieces_templates{}, pieces_indicator{}, 
+	en_passant_pos(-1, -1), 
+	curr_focused_pos(-1, -1), 
+	black_king_pos(4, 0),
+	white_king_pos(4, BOARD_SIZE - 1), 
+	grid_colors{ light_field, dark_field },
+	show_console_board(show_console_board_), 
+	is_pawn_upgrade_window(false), 
+	is_white_turn(true), 
+	possible_moves(UINT16_MAX),
+	is_turn_sound(false) {
 
 	list_of_window_pieces = {
 		PieceFlags::PieceType::QUEEN,
@@ -15,70 +25,25 @@ Board::Board(const uint16_t& window_size, const bool& show_console_board_)
 		PieceFlags::PieceType::KNIGHT,
 		PieceFlags::PieceType::BISHOP,
 	};
+}
 
+sf::SoundSource::Status Board::SoundStatus() {
+	return sounds.game_end.getStatus();
+}
+
+// arrang starting positions of pieces for both players
+void Board::PrepareBoard() {
 	render_board.create(WINDOW_SIZE, WINDOW_SIZE);
 	plain_board.create(WINDOW_SIZE, WINDOW_SIZE);
 
 	pieces_surface.create(WINDOW_SIZE, WINDOW_SIZE);
 	pieces_surface.clear(sf::Color::Color(0, 0, 0, 0));
-}
 
-// kind of init function for pieces template
-void Board::PreparePiecesTemplate() {
-	// pawns templates
-	pieces_templates[static_cast<int>(PieceFlags::PieceColor::WHITE)][static_cast<int>(PieceFlags::PieceType::PAWN)]
-		= std::make_unique<Pawn>("./program/resource/wpawn.png",
-		this, FIELD_SIZE, true);
-	pieces_templates[static_cast<int>(PieceFlags::PieceColor::BLACK)][static_cast<int>(PieceFlags::PieceType::PAWN)]
-		= std::make_unique<Pawn>("./program/resource/bpawn.png",
-		this, FIELD_SIZE, false);
-
-	// rook templates
-	pieces_templates[static_cast<int>(PieceFlags::PieceColor::WHITE)][static_cast<int>(PieceFlags::PieceType::ROOK)]
-		= std::make_unique<Rook>("./program/resource/wrook.png",
-		this, FIELD_SIZE, true);
-	pieces_templates[static_cast<int>(PieceFlags::PieceColor::BLACK)][static_cast<int>(PieceFlags::PieceType::ROOK)]
-		= std::make_unique<Rook>("./program/resource/brook.png",
-		this, FIELD_SIZE, false);
-
-	// knight templates
-	pieces_templates[static_cast<int>(PieceFlags::PieceColor::WHITE)][static_cast<int>(PieceFlags::PieceType::KNIGHT)]
-		= std::make_unique<Knight>("./program/resource/wknight.png",
-		this, FIELD_SIZE, true);
-	pieces_templates[static_cast<int>(PieceFlags::PieceColor::BLACK)][static_cast<int>(PieceFlags::PieceType::KNIGHT)]
-		= std::make_unique<Knight>("./program/resource/bknight.png",
-		this, FIELD_SIZE, false);
-
-	// bishop templates
-	pieces_templates[static_cast<int>(PieceFlags::PieceColor::WHITE)][static_cast<int>(PieceFlags::PieceType::BISHOP)]
-		= std::make_unique<Bishop>("./program/resource/wbishop.png",
-		this, FIELD_SIZE, true);
-	pieces_templates[static_cast<int>(PieceFlags::PieceColor::BLACK)][static_cast<int>(PieceFlags::PieceType::BISHOP)]
-		= std::make_unique<Bishop>("./program/resource/bbishop.png",
-		this, FIELD_SIZE, false);
-
-	// Queen templates
-	pieces_templates[static_cast<int>(PieceFlags::PieceColor::WHITE)][static_cast<int>(PieceFlags::PieceType::QUEEN)]
-		= std::make_unique<Queen>("./program/resource/wqueen.png",
-		this, FIELD_SIZE, true);
-	pieces_templates[static_cast<int>(PieceFlags::PieceColor::BLACK)][static_cast<int>(PieceFlags::PieceType::QUEEN)]
-		= std::make_unique<Queen>("./program/resource/bqueen.png",
-		this, FIELD_SIZE, false);
-
-	// and finally king
-	pieces_templates[static_cast<int>(PieceFlags::PieceColor::WHITE)][static_cast<int>(PieceFlags::PieceType::KING)]
-		= std::make_unique<King>("./program/resource/wking.png",
-		this, FIELD_SIZE, true);
-	pieces_templates[static_cast<int>(PieceFlags::PieceColor::BLACK)][static_cast<int>(PieceFlags::PieceType::KING)]
-		= std::make_unique<King>("./program/resource/bking.png",
-		this, FIELD_SIZE, false);
-}
-
-// arrang starting positions of pieces for both players
-void Board::PrepareBoard() {
-	sf::RectangleShape field(sf::Vector2f(FIELD_SIZE, FIELD_SIZE));
-	
+	PreparePiecesTemplate();
+	PrepareAudio();
 	InitBoardFields();
+
+	sf::RectangleShape field(sf::Vector2f(FIELD_SIZE, FIELD_SIZE));
 
 	// preparing plain board with fields
 	for (uint8_t i = 0; i < BOARD_SIZE; i++) {
@@ -100,64 +65,7 @@ void Board::PrepareBoard() {
 	}
 
 	render_board.draw(sf::Sprite(plain_board.getTexture()));
-
 	possible_moves = PreGenerateAllMoves();
-}
-
-// fill fields with starting postitions of pieces
-void Board::InitBoardFields() noexcept {
-	const auto&& end_index(BOARD_SIZE - 1);
-
-	// rows of pawns
-	pieces_indicator[1].fill
-	(PieceFlags::Indicator{ PieceFlags::PieceColor::BLACK, PieceFlags::PieceType::PAWN, 0 });
-	pieces_indicator[end_index - 1].fill
-	(PieceFlags::Indicator{ PieceFlags::PieceColor::WHITE, PieceFlags::PieceType::PAWN, 0 });
-
-	// other pieces: rooks
-	pieces_indicator[0][0] = 
-		PieceFlags::Indicator{ PieceFlags::PieceColor::BLACK, PieceFlags::PieceType::ROOK, 0 };
-	pieces_indicator[0][end_index] = 
-		PieceFlags::Indicator{ PieceFlags::PieceColor::BLACK, PieceFlags::PieceType::ROOK, 0 };
-
-	pieces_indicator[end_index][0] = 
-		PieceFlags::Indicator{ PieceFlags::PieceColor::WHITE, PieceFlags::PieceType::ROOK, 0 };
-	pieces_indicator[end_index][end_index] = 
-		PieceFlags::Indicator{ PieceFlags::PieceColor::WHITE, PieceFlags::PieceType::ROOK, 0 };
-
-	// knights
-	pieces_indicator[0][1] = 
-		PieceFlags::Indicator{ PieceFlags::PieceColor::BLACK, PieceFlags::PieceType::KNIGHT, 0 };
-	pieces_indicator[0][end_index - 1] = 
-		PieceFlags::Indicator{ PieceFlags::PieceColor::BLACK, PieceFlags::PieceType::KNIGHT, 0 };
-
-	pieces_indicator[end_index][1] = 
-		PieceFlags::Indicator{ PieceFlags::PieceColor::WHITE, PieceFlags::PieceType::KNIGHT, 0 };
-	pieces_indicator[end_index][end_index - 1] =
-		PieceFlags::Indicator{ PieceFlags::PieceColor::WHITE, PieceFlags::PieceType::KNIGHT, 0 };
-
-	// bishops
-	pieces_indicator[0][2] =
-		PieceFlags::Indicator{ PieceFlags::PieceColor::BLACK, PieceFlags::PieceType::BISHOP, 0 };
-	pieces_indicator[0][end_index - 2] = 
-		PieceFlags::Indicator{ PieceFlags::PieceColor::BLACK, PieceFlags::PieceType::BISHOP, 0 };
-
-	pieces_indicator[end_index][2] = 
-		PieceFlags::Indicator{ PieceFlags::PieceColor::WHITE, PieceFlags::PieceType::BISHOP, 0 };
-	pieces_indicator[end_index][end_index - 2] =
-		PieceFlags::Indicator{ PieceFlags::PieceColor::WHITE, PieceFlags::PieceType::BISHOP, 0 };
-
-	// queens
-	pieces_indicator[0][3] = 
-		PieceFlags::Indicator{ PieceFlags::PieceColor::BLACK, PieceFlags::PieceType::QUEEN, 0 };
-	pieces_indicator[end_index][3] = 
-		PieceFlags::Indicator{ PieceFlags::PieceColor::WHITE, PieceFlags::PieceType::QUEEN, 0 };
-
-	// kings
-	pieces_indicator[0][4] = 
-		PieceFlags::Indicator{ PieceFlags::PieceColor::BLACK, PieceFlags::PieceType::KING, 0 };
-	pieces_indicator[end_index][4] = 
-		PieceFlags::Indicator{ PieceFlags::PieceColor::WHITE, PieceFlags::PieceType::KING, 0 };
 }
 
 // draw a piece on his special surface
@@ -231,6 +139,146 @@ void Board::ProcessPressedMouse(const sf::Vector2i& mouse_pos) {
 		MovePiece(move_field.active_clicked);
 		UnfocusPieceField(curr_focused_pos);
 	}
+}
+
+// fill fields with starting postitions of pieces
+void Board::InitBoardFields() noexcept {
+	const auto&& end_index(BOARD_SIZE - 1);
+
+	// rows of pawns
+	pieces_indicator[1].fill
+	(PieceFlags::Indicator{ PieceFlags::PieceColor::BLACK, PieceFlags::PieceType::PAWN, 0 });
+	pieces_indicator[end_index - 1].fill
+	(PieceFlags::Indicator{ PieceFlags::PieceColor::WHITE, PieceFlags::PieceType::PAWN, 0 });
+
+	// other pieces: rooks
+	pieces_indicator[0][0] =
+		PieceFlags::Indicator{ PieceFlags::PieceColor::BLACK, PieceFlags::PieceType::ROOK, 0 };
+	pieces_indicator[0][end_index] =
+		PieceFlags::Indicator{ PieceFlags::PieceColor::BLACK, PieceFlags::PieceType::ROOK, 0 };
+
+	pieces_indicator[end_index][0] =
+		PieceFlags::Indicator{ PieceFlags::PieceColor::WHITE, PieceFlags::PieceType::ROOK, 0 };
+	pieces_indicator[end_index][end_index] =
+		PieceFlags::Indicator{ PieceFlags::PieceColor::WHITE, PieceFlags::PieceType::ROOK, 0 };
+
+	// knights
+	pieces_indicator[0][1] =
+		PieceFlags::Indicator{ PieceFlags::PieceColor::BLACK, PieceFlags::PieceType::KNIGHT, 0 };
+	pieces_indicator[0][end_index - 1] =
+		PieceFlags::Indicator{ PieceFlags::PieceColor::BLACK, PieceFlags::PieceType::KNIGHT, 0 };
+
+	pieces_indicator[end_index][1] =
+		PieceFlags::Indicator{ PieceFlags::PieceColor::WHITE, PieceFlags::PieceType::KNIGHT, 0 };
+	pieces_indicator[end_index][end_index - 1] =
+		PieceFlags::Indicator{ PieceFlags::PieceColor::WHITE, PieceFlags::PieceType::KNIGHT, 0 };
+
+	// bishops
+	pieces_indicator[0][2] =
+		PieceFlags::Indicator{ PieceFlags::PieceColor::BLACK, PieceFlags::PieceType::BISHOP, 0 };
+	pieces_indicator[0][end_index - 2] =
+		PieceFlags::Indicator{ PieceFlags::PieceColor::BLACK, PieceFlags::PieceType::BISHOP, 0 };
+
+	pieces_indicator[end_index][2] =
+		PieceFlags::Indicator{ PieceFlags::PieceColor::WHITE, PieceFlags::PieceType::BISHOP, 0 };
+	pieces_indicator[end_index][end_index - 2] =
+		PieceFlags::Indicator{ PieceFlags::PieceColor::WHITE, PieceFlags::PieceType::BISHOP, 0 };
+
+	// queens
+	pieces_indicator[0][3] =
+		PieceFlags::Indicator{ PieceFlags::PieceColor::BLACK, PieceFlags::PieceType::QUEEN, 0 };
+	pieces_indicator[end_index][3] =
+		PieceFlags::Indicator{ PieceFlags::PieceColor::WHITE, PieceFlags::PieceType::QUEEN, 0 };
+
+	// kings
+	pieces_indicator[0][4] =
+		PieceFlags::Indicator{ PieceFlags::PieceColor::BLACK, PieceFlags::PieceType::KING, 0 };
+	pieces_indicator[end_index][4] =
+		PieceFlags::Indicator{ PieceFlags::PieceColor::WHITE, PieceFlags::PieceType::KING, 0 };
+}
+
+
+void Board::PreparePiecesTemplate() {
+	// pawns templates
+	pieces_templates[static_cast<int>(PieceFlags::PieceColor::WHITE)][static_cast<int>(PieceFlags::PieceType::PAWN)]
+		= std::make_unique<Pawn>("./program/resource/images/wpawn.png",
+			this, FIELD_SIZE, true);
+	pieces_templates[static_cast<int>(PieceFlags::PieceColor::BLACK)][static_cast<int>(PieceFlags::PieceType::PAWN)]
+		= std::make_unique<Pawn>("./program/resource/images/bpawn.png",
+			this, FIELD_SIZE, false);
+
+	// rook templates
+	pieces_templates[static_cast<int>(PieceFlags::PieceColor::WHITE)][static_cast<int>(PieceFlags::PieceType::ROOK)]
+		= std::make_unique<Rook>("./program/resource/images/wrook.png",
+			this, FIELD_SIZE, true);
+	pieces_templates[static_cast<int>(PieceFlags::PieceColor::BLACK)][static_cast<int>(PieceFlags::PieceType::ROOK)]
+		= std::make_unique<Rook>("./program/resource/images/brook.png",
+			this, FIELD_SIZE, false);
+
+	// knight templates
+	pieces_templates[static_cast<int>(PieceFlags::PieceColor::WHITE)][static_cast<int>(PieceFlags::PieceType::KNIGHT)]
+		= std::make_unique<Knight>("./program/resource/images/wknight.png",
+			this, FIELD_SIZE, true);
+	pieces_templates[static_cast<int>(PieceFlags::PieceColor::BLACK)][static_cast<int>(PieceFlags::PieceType::KNIGHT)]
+		= std::make_unique<Knight>("./program/resource/images/bknight.png",
+			this, FIELD_SIZE, false);
+
+	// bishop templates
+	pieces_templates[static_cast<int>(PieceFlags::PieceColor::WHITE)][static_cast<int>(PieceFlags::PieceType::BISHOP)]
+		= std::make_unique<Bishop>("./program/resource/images/wbishop.png",
+			this, FIELD_SIZE, true);
+	pieces_templates[static_cast<int>(PieceFlags::PieceColor::BLACK)][static_cast<int>(PieceFlags::PieceType::BISHOP)]
+		= std::make_unique<Bishop>("./program/resource/images/bbishop.png",
+			this, FIELD_SIZE, false);
+
+	// Queen templates
+	pieces_templates[static_cast<int>(PieceFlags::PieceColor::WHITE)][static_cast<int>(PieceFlags::PieceType::QUEEN)]
+		= std::make_unique<Queen>("./program/resource/images/wqueen.png",
+			this, FIELD_SIZE, true);
+	pieces_templates[static_cast<int>(PieceFlags::PieceColor::BLACK)][static_cast<int>(PieceFlags::PieceType::QUEEN)]
+		= std::make_unique<Queen>("./program/resource/images/bqueen.png",
+			this, FIELD_SIZE, false);
+
+	// and finally king
+	pieces_templates[static_cast<int>(PieceFlags::PieceColor::WHITE)][static_cast<int>(PieceFlags::PieceType::KING)]
+		= std::make_unique<King>("./program/resource/images/wking.png",
+			this, FIELD_SIZE, true);
+	pieces_templates[static_cast<int>(PieceFlags::PieceColor::BLACK)][static_cast<int>(PieceFlags::PieceType::KING)]
+		= std::make_unique<King>("./program/resource/images/bking.png",
+			this, FIELD_SIZE, false);
+}
+
+// load from hard drive all the needed sounds
+void Board::PrepareAudio() {
+	auto load_sbuffer = [](auto sbuffer, const std::string& filepath) {
+		if (!sbuffer->loadFromFile(filepath)) {
+			exit(3);
+		}
+	};
+
+	sbuffers[0] = std::make_unique<sf::SoundBuffer>();
+	load_sbuffer(sbuffers[0].get(), "./program/resource/audio/capture.ogg");
+	sounds.capture.setBuffer(*sbuffers[0]);
+
+	sbuffers[1] = std::make_unique<sf::SoundBuffer>();
+	load_sbuffer(sbuffers[1].get(), "./program/resource/audio/castle.ogg");
+	sounds.castle.setBuffer(*sbuffers[1]);
+
+	sbuffers[2] = std::make_unique<sf::SoundBuffer>();
+	load_sbuffer(sbuffers[2].get(), "./program/resource/audio/game_end.ogg");
+	sounds.game_end.setBuffer(*sbuffers[2]);
+
+	sbuffers[3] = std::make_unique<sf::SoundBuffer>();
+	load_sbuffer(sbuffers[3].get(), "./program/resource/audio/move_check.ogg");
+	sounds.check.setBuffer(*sbuffers[3]);
+
+	sbuffers[4] = std::make_unique<sf::SoundBuffer>();
+	load_sbuffer(sbuffers[4].get(), "./program/resource/audio/move_self.ogg");
+	sounds.move.setBuffer(*sbuffers[4]);
+
+	sbuffers[5] = std::make_unique<sf::SoundBuffer>();
+	load_sbuffer(sbuffers[5].get(), "./program/resource/audio/promote.ogg");
+	sounds.promote.setBuffer(*sbuffers[5]);
 }
 
 // for every piece in 2d array
@@ -331,7 +379,7 @@ void Board::UnfocusPieceField(const sf::Vector2i& field_pos) {
 void Board::MovePiece(const sf::Vector2i& new_move_field) {
 	auto moved_piece(pieces_indicator[curr_focused_pos.y][curr_focused_pos.x]),
 	    old_piece(pieces_indicator[new_move_field.y][new_move_field.x]);
-	
+
 	// checking for castling action
 	if (moved_piece.type == PieceFlags::PieceType::KING and
 		old_piece.type == PieceFlags::PieceType::ROOK and
@@ -342,8 +390,6 @@ void Board::MovePiece(const sf::Vector2i& new_move_field) {
 		ChangePiecePos(pieces_indicator, curr_focused_pos, new_move_field);
 	}
 
-	CheckUpdateIfKingMove(new_move_field);
-
 	pieces_indicator[new_move_field.y][new_move_field.x].IncrementMoveCount();
 	moved_piece = pieces_indicator[new_move_field.y][new_move_field.x];
 
@@ -351,6 +397,7 @@ void Board::MovePiece(const sf::Vector2i& new_move_field) {
 		EnPassantCase(new_move_field, moved_piece);
 	}
 
+	CheckUpdateIfKingMove(new_move_field);
 	ChangePlayersTurn();
 	UpdatePiecesSurface();
 
@@ -393,7 +440,16 @@ void Board::SetPieceOccupiedFields(
 
 void Board::ChangePiecePos(
 	std::array<std::array<PieceFlags::Indicator, 8>, 8>& board,
-	sf::Vector2i old_pos, sf::Vector2i new_pos) noexcept {
+	sf::Vector2i old_pos, sf::Vector2i new_pos, bool play_sound) noexcept {
+
+	if (play_sound and board[new_pos.y][new_pos.x].type != PieceFlags::PieceType::EMPTY) {
+		turn_sound = sounds.capture;
+		is_turn_sound = true;
+	}
+	else if (play_sound) {
+		turn_sound = sounds.move;
+		is_turn_sound = true;
+	}
 
 	// change position
 	board[new_pos.y][new_pos.x] =
@@ -427,6 +483,8 @@ bool Board::CheckForMateStealMate() {
 	if (possible_moves != 0) {
 		return false;
 	}
+
+	sounds.game_end.play();
 
 	const bool is_king_attacked = is_white_turn?
 		CheckKingAttacked(pieces_indicator, PieceFlags::PieceColor::WHITE) : 
@@ -508,6 +566,8 @@ void Board::OpenPawnUpgradeWindow(const sf::Vector2i& pos) {
 		y += direct;
 	}
 	
+	turn_sound = sounds.promote;
+	is_turn_sound = true;
 	is_pawn_upgrade_window = true;
 }
 
@@ -529,6 +589,7 @@ void Board::PickPieceOnWindow(const sf::Vector2i& pos) {
 			PieceFlags::Indicator{ upgrading_color, list_of_window_pieces[(BOARD_SIZE - 1) - pos.y] };;
 	}
 
+	possible_moves = PreGenerateAllMoves();
 	UpdatePiecesSurface();
 	is_pawn_upgrade_window = false;
 }
@@ -551,9 +612,16 @@ void Board::EnPassantCase(const sf::Vector2i& new_move_field, const PieceFlags::
 		= dynamic_cast<Pawn*>(pieces_templates[static_cast<int>(moved_piece.color)][static_cast<int>(moved_piece.type)].get())->
 		GetDirection();
 
+	auto& captured(pieces_indicator[new_move_field.y - d][new_move_field.x]);
+
+	if (captured.type != PieceFlags::PieceType::EMPTY) {
+		turn_sound = sounds.capture;
+		is_turn_sound = true;
+	}
+
 	// capturing pawn using en passant
 	if (new_move_field.y - d == en_passant_pos.y) {
-		pieces_indicator[new_move_field.y - d][new_move_field.x] =
+		captured =
 			PieceFlags::Indicator{ PieceFlags::PieceColor::EMPTY, PieceFlags::PieceType::EMPTY, false };
 	}
 
@@ -570,8 +638,7 @@ void Board::EnPassantCase(const sf::Vector2i& new_move_field, const PieceFlags::
 }
 
 // update pieces on their alpha surface
-// and set occupied fields of each of the piece
-// on surface
+// and set occupied fields of each piece on the surface
 void Board::UpdatePiecesSurface() {
 	pieces_surface.clear(sf::Color::Color(0, 0, 0, 0));
 	ZeroEntireBoardOccuperColor(pieces_indicator);
@@ -598,12 +665,16 @@ void Board::UpdatePiecesSurface() {
 
 	if (CheckKingAttacked(pieces_indicator, PieceFlags::PieceColor::WHITE)) {
 		std::cout << "MATE BLACK";
-	}
+		turn_sound = sounds.check;
 
-	if (CheckKingAttacked(pieces_indicator, PieceFlags::PieceColor::BLACK)) {
+	}
+	else if (CheckKingAttacked(pieces_indicator, PieceFlags::PieceColor::BLACK)) {
 		std::cout << "MATE WHITE";
+		turn_sound = sounds.check;
 	}
-
+	
+	turn_sound.play();
+	is_turn_sound = false;
 	std::cout << '\n';
 }
 
@@ -625,6 +696,8 @@ void Board::CastleKingChange(sf::Vector2i old_pos, sf::Vector2i new_pos) {
 		pieces_indicator[new_pos.y][5] = 
 			PieceFlags::Indicator{ pieces_indicator[new_pos.y][new_pos.x].color, PieceFlags::PieceType::ROOK };
 	}
+
+	sounds.castle.play();
 }
 
 // reset current en passant position

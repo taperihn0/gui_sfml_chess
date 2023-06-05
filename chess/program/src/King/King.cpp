@@ -69,7 +69,7 @@ bool King::CheckFieldCheckSafeValid(
 
 	board->ZeroEntireBoardOccuperColor(pieces_indicator_cpy);
 
-	board->ChangePiecePos(pieces_indicator_cpy, old_pos, new_pos);
+	board->ChangePiecePos(pieces_indicator_cpy, old_pos, new_pos, false);
 
 	for (uint8_t i = 0; i < 8; i++) {
 		for (uint8_t j = 0; j < 8; j++) {
