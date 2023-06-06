@@ -159,6 +159,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="program\src\Game\Menu.cpp" />
     <ClCompile Include="program\src\King\King.cpp" />
     <ClCompile Include="program\src\Knight\Knight.cpp" />
     <ClCompile Include="program\src\Bishop\Bishop.cpp" />
@@ -171,6 +172,7 @@
     <ClCompile Include="program\src\Queen\Queen.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="program\src\Game\Menu.h" />
     <ClInclude Include="program\src\Indicator.h" />
     <ClInclude Include="program\src\King\King.h" />
     <ClInclude Include="program\src\Knight\Knight.h" />

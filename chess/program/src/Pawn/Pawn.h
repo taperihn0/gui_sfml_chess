@@ -5,42 +5,55 @@
 class Pawn final : public Piece {
 public:
 	Pawn(const std::string& texture_path, Board* board_ptr,
-		const uint16_t& size, const bool &is_white_flag);
+		const uint16_t& size, bool is_white_flag);
 
+	// return active fields of path - its move fields in front 
+	// of the pawn and diagonal fields if capture is avaible
 	std::vector<sf::Vector2i>&& GetActiveFields(
 		const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
-		const sf::Vector2i& pos, bool consider_check = true, const bool& clear = true) override;
+		const sf::Vector2i& pos, bool consider_check = true, bool clear = true) override;
 
+	// check whether pawn can be upgraded (standing on the last line)
 	bool CheckForUpgrade(
 		const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
 		const sf::Vector2i& pos);
 
+	// mark occupied fields of pawn (both diagonals)
 	void MarkOccupiedFields(
 		std::array<std::array<PieceFlags::Indicator, 8>, 8>& board,
 		const sf::Vector2i& pos, bool consider_check = true) override;
 
-	const short& GetDirection() noexcept;
+	// return moving direction of the pawn - 
+	// it actually depends on the color of the pawn
+	const int8_t& GetDirection() noexcept;
 private:
+	// compute avaible moves and append them
 	void AvaibleMoves(
 		const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
 		const bool& first_move_flag, sf::Vector2i& temp_vec, sf::Vector2i pos) noexcept;
 
+	// append avaible captures for pawn 
+	// and check if en passant capture is avaible
 	void AvaibleCaptures(
 		const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
 		sf::Vector2i& temp_vec, sf::Vector2i pos) noexcept;
 
+	// check and eventually append possible en passant capture field
 	void CheckAppendEnPassantCapture(
 		const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
 		const sf::Vector2i& pos);
-
+	
+	// just check if the field can be captured by the pawn
 	bool CheckCaptureField(
 		const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
 		const sf::Vector2i& pos) noexcept;
 
+	// checking whether field is occupied by enemy pawn
+	// and whether it was his first move there
 	bool CheckEnPassantPawn(
 		const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
 		const sf::Vector2i& pos) noexcept;
 
-	const short direction;
+	const int8_t direction;
 };
 

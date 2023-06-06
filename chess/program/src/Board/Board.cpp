@@ -27,11 +27,7 @@ Board::Board(const uint16_t& window_size, const bool& show_console_board_)
 	};
 }
 
-sf::SoundSource::Status Board::SoundStatus() {
-	return sounds.game_end.getStatus();
-}
 
-// arrang starting positions of pieces for both players
 void Board::PrepareBoard() {
 	render_board.create(WINDOW_SIZE, WINDOW_SIZE);
 	plain_board.create(WINDOW_SIZE, WINDOW_SIZE);
@@ -68,36 +64,40 @@ void Board::PrepareBoard() {
 	possible_moves = PreGenerateAllMoves();
 }
 
-// draw a piece on his special surface
+
+sf::SoundSource::Status
+Board::SoundStatus() {
+	return sounds.game_end.getStatus();
+}
+
+
 void Board::DrawOnPiecesSurfaceField(sf::Sprite& piece_sprite, sf::Vector2f& window_pos) {
 	piece_sprite.setPosition(window_pos);
 	pieces_surface.draw(piece_sprite);
 }
 
-// function for drawing board on real game window
+
 sf::Sprite Board::GetBoardSprite() {
 	UpdateBoard();
 	return sf::Sprite(render_board.getTexture());
 }
 
-// size in pixels of a single field on the board
+
 const uint16_t& Board::GetFieldSize() noexcept {
 	return FIELD_SIZE;
 }
 
-// size of a chess board
+
 constexpr uint8_t Board::GetBoardSize() noexcept {
 	return BOARD_SIZE;
 }
 
-// return current field, which contain pawn
-// which is possible to capture by en passant technique - 
-// there is only one such pawn on the board
+
 const sf::Vector2i& Board::GetEnPassantPos() noexcept {
 	return en_passant_pos;
 }
 
-// process for every single click in the area of game window
+
 void Board::ProcessPressedMouse(const sf::Vector2i& mouse_pos) {
 	const sf::Vector2i field_pos((mouse_pos.x - 1) / FIELD_SIZE, (mouse_pos.y - 1) / FIELD_SIZE);
 
@@ -141,7 +141,7 @@ void Board::ProcessPressedMouse(const sf::Vector2i& mouse_pos) {
 	}
 }
 
-// fill fields with starting postitions of pieces
+
 void Board::InitBoardFields() noexcept {
 	const auto&& end_index(BOARD_SIZE - 1);
 
@@ -248,7 +248,7 @@ void Board::PreparePiecesTemplate() {
 			this, FIELD_SIZE, false);
 }
 
-// load from hard drive all the needed sounds
+
 void Board::PrepareAudio() {
 	auto load_sbuffer = [](auto sbuffer, const std::string& filepath) {
 		if (!sbuffer->loadFromFile(filepath)) {
@@ -281,9 +281,7 @@ void Board::PrepareAudio() {
 	sounds.promote.setBuffer(*sbuffers[5]);
 }
 
-// for every piece in 2d array
-// locate it in a proper field in alpha surface
-// and generate its occupied fields
+
 void Board::LocatePieceOnSurface(const uint8_t& y, const uint8_t& x) {
 	const auto& piece = pieces_indicator[y][x];
 
@@ -322,7 +320,7 @@ uint16_t Board::PreGenerateAllMoves() {
 	return moves_number;
 }
 
-// focus after clicking on a piece
+
 void Board::FocusPieceField(const PieceFlags::Indicator& picked_piece, const sf::Vector2i& field_pos) {
 	
 	// drawing highlighted field under the piece
@@ -349,7 +347,7 @@ void Board::FocusPieceField(const PieceFlags::Indicator& picked_piece, const sf:
 	curr_focused_pos.y = field_pos.y, curr_focused_pos.x = field_pos.x;
 }
 
-// unfocus after clicking exactly on a focused piece
+
 void Board::UnfocusPieceField(const sf::Vector2i& field_pos) {
 
 	// covering highlighted field 
@@ -374,8 +372,7 @@ void Board::UnfocusPieceField(const sf::Vector2i& field_pos) {
 	curr_focused_pos.y = -1, curr_focused_pos.x = -1;
 }
 
-// move given piece to a given new field - 
-// occupy empty field or capture enemy piece there
+
 void Board::MovePiece(const sf::Vector2i& new_move_field) {
 	auto moved_piece(pieces_indicator[curr_focused_pos.y][curr_focused_pos.x]),
 	    old_piece(pieces_indicator[new_move_field.y][new_move_field.x]);
@@ -421,7 +418,7 @@ void Board::MovePiece(const sf::Vector2i& new_move_field) {
 	possible_moves = PreGenerateAllMoves();
 }
 
-// zero occuper color of field
+
 void Board::ZeroEntireBoardOccuperColor(std::array<std::array<PieceFlags::Indicator, 8>, 8>& board) {
 	for (uint8_t i = 0; i < BOARD_SIZE; i++) {
 		for (uint8_t j = 0; j < BOARD_SIZE; j++) {
@@ -431,7 +428,7 @@ void Board::ZeroEntireBoardOccuperColor(std::array<std::array<PieceFlags::Indica
 	}
 }
 
-// set all of the piece occupied fields
+
 void Board::SetPieceOccupiedFields(
 	std::array<std::array<PieceFlags::Indicator, 8>, 8>& board,
 	const PieceFlags::Indicator& piece, const uint8_t& y, const uint8_t& x, bool consider_mate) {
@@ -460,13 +457,13 @@ void Board::ChangePiecePos(
 		PieceFlags::Indicator{ PieceFlags::PieceColor::EMPTY, PieceFlags::PieceType::EMPTY, 0 };
 }
 
-// check whether given coordinates are valid for my board
+
 bool Board::isValidField(const sf::Vector2i& coords) noexcept {
 	return (coords.x >= 0 and coords.x < BOARD_SIZE) and
 		(coords.y >= 0 and coords.y < BOARD_SIZE);
 }
 
-// is there a mate on a king of a given color?
+
 bool Board::CheckKingAttacked(
 	const std::array<std::array<PieceFlags::Indicator, 8>, 8>& board, 
 	PieceFlags::PieceColor king_color) noexcept {
@@ -503,12 +500,12 @@ bool Board::CheckForMateStealMate() {
 	return true;
 }
 
-// check whether my focus flag is set
+
 bool Board::isValidFocused() noexcept {
 	return curr_focused_pos.x != -1 and curr_focused_pos.y != -1;
 }
 
-// check whether field is in focus fields
+
 Board::FieldDataFlag 
 Board::CheckAndGetIfFocused(const sf::Vector2i& coords) {
 	auto found = std::find(active_focused_field.cbegin(), active_focused_field.cend(), coords);
@@ -519,12 +516,12 @@ Board::CheckAndGetIfFocused(const sf::Vector2i& coords) {
 	return { false, sf::Vector2i() };
 }
 
-// check whether given color is the same as current color of moving player
+
 bool Board::CheckCurrTurnColor(const PieceFlags::PieceColor& color) noexcept {
 	return color == static_cast<PieceFlags::PieceColor>(static_cast<int>(PieceFlags::PieceColor::BLACK) - is_white_turn);
 }
 
-// check if king moved and update its position
+
 void Board::CheckUpdateIfKingMove(sf::Vector2i new_pos) {
 	const auto& moved_piece(pieces_indicator[new_pos.y][new_pos.x]);
 
@@ -540,7 +537,7 @@ void Board::CheckUpdateIfKingMove(sf::Vector2i new_pos) {
 	}
 }
 
-// draw window with pieces when pawn is upgrading
+
 void Board::OpenPawnUpgradeWindow(const sf::Vector2i& pos) {
 	upgrading_color = pieces_indicator[pos.y][pos.x].color;
 	upgrading_x_pos = pos.x;
@@ -571,9 +568,7 @@ void Board::OpenPawnUpgradeWindow(const sf::Vector2i& pos) {
 	is_pawn_upgrade_window = true;
 }
 
-// process mouse click - 
-// if it's not valid, just wait for 
-// proper click pos and leave window turned on
+
 void Board::PickPieceOnWindow(const sf::Vector2i& pos) {
 	if (pos.x != upgrading_x_pos) {
 		return;
@@ -594,7 +589,7 @@ void Board::PickPieceOnWindow(const sf::Vector2i& pos) {
 	is_pawn_upgrade_window = false;
 }
 
-// updating render_board sprite
+
 void Board::UpdateBoard() {
 	pieces_surface.display();
 	plain_board.display();
@@ -605,8 +600,7 @@ void Board::UpdateBoard() {
 	render_board.display();
 }
 
-// all the problems with en passant capture in one function -
-// capturing and updating current pawn which can be captured using en passant technique
+
 void Board::EnPassantCase(const sf::Vector2i& new_move_field, const PieceFlags::Indicator& moved_piece) {
 	const auto& d
 		= dynamic_cast<Pawn*>(pieces_templates[static_cast<int>(moved_piece.color)][static_cast<int>(moved_piece.type)].get())->
@@ -637,8 +631,7 @@ void Board::EnPassantCase(const sf::Vector2i& new_move_field, const PieceFlags::
 	}
 }
 
-// update pieces on their alpha surface
-// and set occupied fields of each piece on the surface
+
 void Board::UpdatePiecesSurface() {
 	pieces_surface.clear(sf::Color::Color(0, 0, 0, 0));
 	ZeroEntireBoardOccuperColor(pieces_indicator);
@@ -678,8 +671,7 @@ void Board::UpdatePiecesSurface() {
 	std::cout << '\n';
 }
 
-// change is_white_turn variable to indicate 
-// whose is turn now
+
 void Board::ChangePlayersTurn() noexcept {
 	is_white_turn = !is_white_turn;
 }
@@ -700,7 +692,7 @@ void Board::CastleKingChange(sf::Vector2i old_pos, sf::Vector2i new_pos) {
 	sounds.castle.play();
 }
 
-// reset current en passant position
+
 void Board::SetEnPassantPos(const int& x, const int& y) noexcept {
 	en_passant_pos.x = x, en_passant_pos.y = y;
 }

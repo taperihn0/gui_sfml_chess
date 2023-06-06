@@ -3,13 +3,14 @@
 
 Piece::Piece(const std::string& texture_path, Board* board_ptr,
 	const uint16_t& size, const PieceFlags::PieceColor& piece_color_)
-	: board(board_ptr), piece_color(piece_color_), 
+	: board(board_ptr), 
+	piece_color(piece_color_), 
 	piece_texture_path(texture_path),
 	piece_texture_ptr(std::make_unique<sf::Texture>()) {
 	PreparePieceTexture(size);
 }
 
-// just load necessery resources from hard drive 
+
 void Piece::PreparePieceTexture(const uint16_t& size) {
 	if (!piece_texture_ptr->loadFromFile(piece_texture_path)) {
 		throw std::runtime_error("Error during loading piece texture from file.");
@@ -18,17 +19,16 @@ void Piece::PreparePieceTexture(const uint16_t& size) {
 	piece_texture_ptr->setSmooth(true);
 	piece_sprite.setTexture(*piece_texture_ptr);
 
-	const auto& curr_size = piece_sprite.getTextureRect();
-	piece_sprite.setScale(float(size) / curr_size.width, float(size) / curr_size.height);
+	const auto& curr_size(piece_sprite.getTextureRect());
+	piece_sprite.setScale(static_cast<float>(size) / curr_size.width, static_cast<float>(size) / curr_size.height);
 }
 
-// draw piece's sprite on an transparent surface 
+
 void Piece::DrawPiece(sf::Vector2f& window_pos) {
 	board->DrawOnPiecesSurfaceField(piece_sprite, window_pos);
 }
 
-// check whether field is avaible - if it's valid field
-// or is not occupied by different piece
+
 bool Piece::CheckFieldFreeValid(
 	const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
 	const sf::Vector2i& pos) noexcept {
@@ -36,7 +36,7 @@ bool Piece::CheckFieldFreeValid(
 		pieces_indicator[pos.y][pos.x].type == PieceFlags::PieceType::EMPTY;
 }
 
-// check whether given move of a piece block check
+
 bool Piece::CheckCheckSafe(
 	std::array<std::array<PieceFlags::Indicator, 8>, 8> pieces_indicator_cpy,
 	sf::Vector2i old_pos, sf::Vector2i new_pos) {
@@ -60,9 +60,7 @@ bool Piece::CheckCheckSafe(
 	return !board->CheckKingAttacked(pieces_indicator_cpy, piece_color);
 }
 
-// check all the occupied fields and it will be just set of active fields
-// for most of the time with some exceptions
-// mark them on the given board
+
 void Piece::MarkOccupiedFields(
 	std::array<std::array<PieceFlags::Indicator, 8>, 8>& board,
 	const sf::Vector2i& pos, bool consider_check) {
@@ -73,7 +71,7 @@ void Piece::MarkOccupiedFields(
 	}
 }
 
-// check if field is valid and if it's occupied by enemy piece
+
 bool Piece::CheckFieldOccupied(
 	const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
 	const sf::Vector2i& pos, const PieceFlags::PieceColor& piece_color_) noexcept {
@@ -82,7 +80,7 @@ bool Piece::CheckFieldOccupied(
 		pieces_indicator[pos.y][pos.x].color != piece_color_;
 }
 
-// set an occuper color of the given field
+
 void Piece::MarkSingleOccupied(PieceFlags::Indicator& field) noexcept {
 	if (piece_color == PieceFlags::PieceColor::WHITE) {
 		field.occuping_color.white = true;

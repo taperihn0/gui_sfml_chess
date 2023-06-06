@@ -2,16 +2,15 @@
 #include "..\Board\Board.h"
 
 King::King(const std::string& texture_path, Board* board_ptr,
-	const uint16_t& size, const bool& is_white_flag)
+	const uint16_t& size, bool is_white_flag)
 	: Piece(texture_path, board_ptr, size, PieceFlags::PieceColor(2 - is_white_flag)),
 	directions{ { {-1, -1}, {0, -1}, {1, -1}, {1, 0}, {1, 1}, {0, 1}, {-1, 1}, {-1, 0} } }
 {}
 
-// return active fields of king - all of the surrounding fields, except those 
-// controlled by enemy
+
 std::vector<sf::Vector2i>&& King::GetActiveFields(
 	const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
-	const sf::Vector2i& pos, bool consider_check, const bool& clear) {
+	const sf::Vector2i& pos, bool consider_check, bool clear) {
 	if (clear) {
 		avaible_fields.clear();
 	}
@@ -47,7 +46,7 @@ void King::MarkOccupiedFields(
 	}
 }
 
-// check whether new field is safe for king
+
 bool King::CheckFieldCheckSafeValid(
 	const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
 	sf::Vector2i old_pos, sf::Vector2i new_pos) noexcept {
@@ -89,11 +88,7 @@ bool King::CheckFieldCheckSafeValid(
 	return !new_field.occuping_color.white;
 }
 
-// check castling scenario
-// conditions: 
-// * king can't be attacked
-// * it's has to be first move of rook and king
-// * between these pieces has to be free space
+
 void King::CheckAppendCastleMove(
 	const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
 	sf::Vector2i pos) {

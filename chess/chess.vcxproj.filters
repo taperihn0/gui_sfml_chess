@@ -45,6 +45,9 @@
     <ClCompile Include="program\src\King\King.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="program\src\Game\Menu.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="program\src\Board\Board.h">
@@ -75,6 +78,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="program\src\Indicator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="program\src\Game\Menu.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

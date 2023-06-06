@@ -7,20 +7,28 @@
 class King final : public Piece {
 public:
 	King(const std::string& texture_path, Board* board_ptr,
-		const uint16_t& size, const bool& is_white_flag);
+		const uint16_t& size, bool is_white_flag);
 
+	// return active fields of king - all of the surrounding fields, except those 
+	// controlled by enemy
 	std::vector<sf::Vector2i>&& GetActiveFields(
 		const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
-		const sf::Vector2i& pos, bool consider_check = true, const bool& clear = true) override;
+		const sf::Vector2i& pos, bool consider_check = true, bool clear = true) override;
 
 	void MarkOccupiedFields(
 		std::array<std::array<PieceFlags::Indicator, 8>, 8>& board,
 		const sf::Vector2i& pos, bool consider_check = true) override;
 private:
+	// check whether new field is safe for king
 	bool CheckFieldCheckSafeValid(
 		const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
 		sf::Vector2i old_pos, sf::Vector2i new_pos) noexcept;
 
+	// check castling scenario
+	// conditions: 
+	// * king can't be attacked
+	// * it's has to be first move of rook and king
+	// * between these pieces has to be free space
 	void CheckAppendCastleMove(
 		const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
 		sf::Vector2i pos);

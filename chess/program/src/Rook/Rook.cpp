@@ -2,16 +2,15 @@
 #include "..\Board\Board.h"
 
 Rook::Rook(const std::string& texture_path, Board* board_ptr,
-	const uint16_t& size, const bool& is_white_flag)
+	const uint16_t& size, bool is_white_flag)
 	: Piece(texture_path, board_ptr, size, PieceFlags::PieceColor(2 - is_white_flag)),
 	directions{ { {0, 1}, {0, -1}, {1, 0}, {-1, 0} } }
 {}
 
-// return avaible fields for rook - 
-// some kind of straight lines
+
 std::vector<sf::Vector2i>&& Rook::GetActiveFields(
 	const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
-	const sf::Vector2i& pos, bool consider_check, const bool& clear) {
+	const sf::Vector2i& pos, bool consider_check, bool clear) {
 	if (clear) {
 		avaible_fields.clear();
 	}
@@ -25,7 +24,7 @@ std::vector<sf::Vector2i>&& Rook::GetActiveFields(
 	return std::move(avaible_fields);
 }
 
-// go through straight line of rook's active fields
+
 void Rook::ProcessLine(
 	const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
 	sf::Vector2i pos, const sf::Vector2i& direction) noexcept {
