@@ -7,14 +7,17 @@ public:
 	Knight(const std::string& texture_path, Board* board_ptr,
 		const uint16_t& size, bool is_white_flag);
 
+	// return current active fields of knight piece
 	std::vector<sf::Vector2i>&& GetActiveFields(
 		const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
 		const sf::Vector2i& pos, bool consider_check = true, bool clear = true) override;
 private:
+	// check if pos + direction coordinates field is valid and safe
 	void AvaibleMovesCaptures(
 		const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
 		sf::Vector2i pos) noexcept;
 
+	// check if knight can stand up straight in the field of coordinates pos
 	bool CheckMoveCaptureField(
 		const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
 		const sf::Vector2i& pos) noexcept;

@@ -60,6 +60,7 @@ void Board::PrepareBoard() {
 		}
 	}
 
+	is_white_turn = true;
 	render_board.draw(sf::Sprite(plain_board.getTexture()));
 	possible_moves = PreGenerateAllMoves();
 }
@@ -144,6 +145,11 @@ void Board::ProcessPressedMouse(const sf::Vector2i& mouse_pos) {
 
 void Board::InitBoardFields() noexcept {
 	const auto&& end_index(BOARD_SIZE - 1);
+
+	// empty rows
+	for (uint8_t i = 2; i <= 5; i++) {
+		pieces_indicator[i] = {};
+	}
 
 	// rows of pawns
 	pieces_indicator[1].fill

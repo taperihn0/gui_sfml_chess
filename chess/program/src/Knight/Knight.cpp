@@ -7,7 +7,7 @@ Knight::Knight(const std::string& texture_path, Board* board_ptr,
 	directions{}
 {}
 
-// return current active fields of knight piece
+
 std::vector<sf::Vector2i>&& Knight::GetActiveFields(
 	const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
 	const sf::Vector2i& pos, bool consider_check, bool clear) {
@@ -38,7 +38,7 @@ std::vector<sf::Vector2i>&& Knight::GetActiveFields(
 	return std::move(avaible_fields);
 }
 
-// check if pos + direction coordinates field is valid and safe
+
 void Knight::AvaibleMovesCaptures(
 	const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
 	sf::Vector2i pos) noexcept {
@@ -51,7 +51,7 @@ void Knight::AvaibleMovesCaptures(
 	}
 }
 
-// check if knight can stand up straight in the field of coordinates pos
+
 bool Knight::CheckMoveCaptureField(
 	const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
 	const sf::Vector2i& pos) noexcept {
