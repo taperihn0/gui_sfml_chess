@@ -14,10 +14,13 @@ Board::Board(const uint16_t& window_size, const bool& show_console_board_)
 	white_king_pos(4, BOARD_SIZE - 1), 
 	grid_colors{ light_field, dark_field },
 	show_console_board(show_console_board_), 
-	is_pawn_upgrade_window(false), 
+	is_pawn_upgrade_window(false),
+	upgrading_color(PieceFlags::PieceColor::EMPTY),
+	upgrading_x_pos(UINT8_MAX),
 	is_white_turn(true), 
 	possible_moves(UINT16_MAX),
-	is_turn_sound(false) {
+	is_turn_sound(false),
+	engine(pieces_indicator, this, &pieces_templates) {
 
 	list_of_window_pieces = {
 		PieceFlags::PieceType::QUEEN,
@@ -63,12 +66,6 @@ void Board::PrepareBoard() {
 	is_white_turn = true;
 	render_board.draw(sf::Sprite(plain_board.getTexture()));
 	possible_moves = PreGenerateAllMoves();
-}
-
-
-sf::SoundSource::Status
-Board::SoundStatus() {
-	return sounds.game_end.getStatus();
 }
 
 
@@ -137,14 +134,18 @@ void Board::ProcessPressedMouse(const sf::Vector2i& mouse_pos) {
 		UnfocusPieceField(curr_focused_pos);
 	}
 	else if (is_focus_flag and move_field.is_found) {
-		MovePiece(move_field.active_clicked);
+		MovePiece(curr_focused_pos, move_field.active_clicked);
 		UnfocusPieceField(curr_focused_pos);
+
+		// bot's response
+		auto pos_change(engine.GenerateBestMove(cache, 3, false));
+		MovePiece(pos_change.old_pos, pos_change.new_pos);
 	}
 }
 
 
 void Board::InitBoardFields() noexcept {
-	const auto&& end_index(BOARD_SIZE - 1);
+	const auto end_index(BOARD_SIZE - 1);
 
 	// empty rows
 	for (uint8_t i = 2; i <= 5; i++) {
@@ -289,7 +290,7 @@ void Board::PrepareAudio() {
 
 
 void Board::LocatePieceOnSurface(const uint8_t& y, const uint8_t& x) {
-	const auto& piece = pieces_indicator[y][x];
+	const auto piece = pieces_indicator[y][x];
 
 	if (piece.type == PieceFlags::PieceType::EMPTY) {
 		return;
@@ -303,23 +304,24 @@ void Board::LocatePieceOnSurface(const uint8_t& y, const uint8_t& x) {
 
 
 uint16_t Board::PreGenerateAllMoves() {
-	uint8_t turn_color(2 - is_white_turn);
+	auto turn_col(static_cast<PieceFlags::PieceColor>(2 - is_white_turn));
 	PieceFlags::Indicator piece;
-	uint16_t moves_number = 0;
+	uint16_t moves_number(0);
 
 	for (uint8_t i = 0; i < BOARD_SIZE; i++) {
 		for (uint8_t j = 0; j < BOARD_SIZE; j++) {
 			piece = pieces_indicator[i][j];
 
-			if (piece.type != PieceFlags::PieceType::EMPTY and
-				piece.color == static_cast<PieceFlags::PieceColor>(turn_color)) {
-				std::vector<sf::Vector2i> avaible_fields = 
-					pieces_templates[static_cast<int>(piece.color)][static_cast<int>(piece.type)]->
-					GetActiveFields(pieces_indicator, sf::Vector2i(j, i));
-
-				moves_number += static_cast<uint16_t>(avaible_fields.size());
-				cache[i][j] = std::move(avaible_fields);
+			if (piece.type == PieceFlags::PieceType::EMPTY or turn_col != piece.color) {
+				continue;
 			}
+
+			std::vector<sf::Vector2i> avaible_fields(
+				pieces_templates[static_cast<int>(piece.color)][static_cast<int>(piece.type)]->
+				GetActiveFields(pieces_indicator, sf::Vector2i(j, i)));
+
+			moves_number += static_cast<uint16_t>(avaible_fields.size());
+			cache[i][j] = std::move(avaible_fields);
 		}
 	}
 
@@ -379,28 +381,30 @@ void Board::UnfocusPieceField(const sf::Vector2i& field_pos) {
 }
 
 
-void Board::MovePiece(const sf::Vector2i& new_move_field) {
-	auto moved_piece(pieces_indicator[curr_focused_pos.y][curr_focused_pos.x]),
-	    old_piece(pieces_indicator[new_move_field.y][new_move_field.x]);
+void Board::MovePiece(const sf::Vector2i old_pos, const sf::Vector2i new_pos) {
+	auto moved_piece(pieces_indicator[old_pos.y][old_pos.x]),
+	    old_piece(pieces_indicator[new_pos.y][new_pos.x]);
 
 	// checking for castling action
 	if (moved_piece.type == PieceFlags::PieceType::KING and
 		old_piece.type == PieceFlags::PieceType::ROOK and
 		old_piece.color == moved_piece.color) {
-		CastleKingChange(curr_focused_pos, new_move_field);
+		SetCastleSound();
+		CastleKingChange(pieces_indicator, old_pos, new_pos);
 	}
 	else {
-		ChangePiecePos(pieces_indicator, curr_focused_pos, new_move_field);
+		SetMoveSound(new_pos);
+		ChangePiecePos(pieces_indicator, old_pos, new_pos);
 	}
 
-	pieces_indicator[new_move_field.y][new_move_field.x].IncrementMoveCount();
-	moved_piece = pieces_indicator[new_move_field.y][new_move_field.x];
+	pieces_indicator[new_pos.y][new_pos.x].IncrementMoveCount();
+	moved_piece = pieces_indicator[new_pos.y][new_pos.x];
 
 	if (moved_piece.type == PieceFlags::PieceType::PAWN) {
-		EnPassantCase(new_move_field, moved_piece);
+		EnPassantCase(new_pos, moved_piece);
 	}
 
-	CheckUpdateIfKingMove(new_move_field);
+	CheckUpdateIfKingMove(new_pos);
 	ChangePlayersTurn();
 	UpdatePiecesSurface();
 
@@ -414,18 +418,18 @@ void Board::MovePiece(const sf::Vector2i& new_move_field) {
 	if (moved_piece.type == PieceFlags::PieceType::PAWN) {
 		is_upgrade = 
 			dynamic_cast<Pawn*>(pieces_templates[static_cast<int>(moved_piece.color)][static_cast<int>(moved_piece.type)].get())->
-			CheckForUpgrade(pieces_indicator, new_move_field);
+			CheckForUpgrade(pieces_indicator, new_pos);
 	}
 	
 	if (is_upgrade) {
-		OpenPawnUpgradeWindow(new_move_field);
+		OpenPawnUpgradeWindow(new_pos);
 	}
 
 	possible_moves = PreGenerateAllMoves();
 }
 
 
-void Board::ZeroEntireBoardOccuperColor(std::array<std::array<PieceFlags::Indicator, 8>, 8>& board) {
+void Board::ZeroEntireBoardOccuperColor(PieceFlags::board_grid_t& board) {
 	for (uint8_t i = 0; i < BOARD_SIZE; i++) {
 		for (uint8_t j = 0; j < BOARD_SIZE; j++) {
 			board[i][j].occuping_color.white = false;
@@ -436,23 +440,15 @@ void Board::ZeroEntireBoardOccuperColor(std::array<std::array<PieceFlags::Indica
 
 
 void Board::SetPieceOccupiedFields(
-	std::array<std::array<PieceFlags::Indicator, 8>, 8>& board,
+	PieceFlags::board_grid_t& board,
 	const PieceFlags::Indicator& piece, const uint8_t& y, const uint8_t& x, bool consider_mate) {
 	pieces_templates[static_cast<int>(piece.color)][static_cast<int>(piece.type)]->MarkOccupiedFields(board, sf::Vector2i(x, y), consider_mate);
 }
 
-void Board::ChangePiecePos(
-	std::array<std::array<PieceFlags::Indicator, 8>, 8>& board,
-	sf::Vector2i old_pos, sf::Vector2i new_pos, bool play_sound) noexcept {
 
-	if (play_sound and board[new_pos.y][new_pos.x].type != PieceFlags::PieceType::EMPTY) {
-		turn_sound = sounds.capture;
-		is_turn_sound = true;
-	}
-	else if (play_sound) {
-		turn_sound = sounds.move;
-		is_turn_sound = true;
-	}
+void Board::ChangePiecePos(
+	PieceFlags::board_grid_t& board,
+	sf::Vector2i old_pos, sf::Vector2i new_pos) noexcept {
 
 	// change position
 	board[new_pos.y][new_pos.x] =
@@ -464,6 +460,22 @@ void Board::ChangePiecePos(
 }
 
 
+void Board::CastleKingChange(
+	PieceFlags::board_grid_t& board, 
+	sf::Vector2i old_pos, sf::Vector2i new_pos) {
+	ChangePiecePos(board, old_pos, new_pos);
+
+	if (new_pos.x == 0) {
+		board[new_pos.y][3] =
+			PieceFlags::Indicator{ board[new_pos.y][new_pos.x].color, PieceFlags::PieceType::ROOK };
+	}
+	else {
+		board[new_pos.y][5] =
+			PieceFlags::Indicator{ board[new_pos.y][new_pos.x].color, PieceFlags::PieceType::ROOK };
+	}
+}
+
+
 bool Board::isValidField(const sf::Vector2i& coords) noexcept {
 	return (coords.x >= 0 and coords.x < BOARD_SIZE) and
 		(coords.y >= 0 and coords.y < BOARD_SIZE);
@@ -471,7 +483,7 @@ bool Board::isValidField(const sf::Vector2i& coords) noexcept {
 
 
 bool Board::CheckKingAttacked(
-	const std::array<std::array<PieceFlags::Indicator, 8>, 8>& board, 
+	const PieceFlags::board_grid_t& board, 
 	PieceFlags::PieceColor king_color) noexcept {
 	if (king_color == PieceFlags::PieceColor::WHITE) {
 		return board[static_cast<int>(white_king_pos.y)][static_cast<int>(white_king_pos.x)]
@@ -608,9 +620,9 @@ void Board::UpdateBoard() {
 
 
 void Board::EnPassantCase(const sf::Vector2i& new_move_field, const PieceFlags::Indicator& moved_piece) {
-	const auto& d
-		= dynamic_cast<Pawn*>(pieces_templates[static_cast<int>(moved_piece.color)][static_cast<int>(moved_piece.type)].get())->
-		GetDirection();
+	const auto d(
+		dynamic_cast<Pawn*>(pieces_templates[static_cast<int>(moved_piece.color)][static_cast<int>(moved_piece.type)].get())->
+		GetDirection());
 
 	auto& captured(pieces_indicator[new_move_field.y - d][new_move_field.x]);
 
@@ -622,12 +634,13 @@ void Board::EnPassantCase(const sf::Vector2i& new_move_field, const PieceFlags::
 	// capturing pawn using en passant
 	if (new_move_field.y - d == en_passant_pos.y) {
 		captured =
-			PieceFlags::Indicator{ PieceFlags::PieceColor::EMPTY, PieceFlags::PieceType::EMPTY, false };
+			PieceFlags::Indicator{ PieceFlags::PieceColor::EMPTY, PieceFlags::PieceType::EMPTY };
 	}
 
 	// setting en passant position
-	const bool is_double_field_move = (moved_piece.color == PieceFlags::PieceColor::WHITE and new_move_field.y == 4) or
-		(moved_piece.color == PieceFlags::PieceColor::BLACK and new_move_field.y == 3);
+	const bool is_double_field_move(
+		(moved_piece.color == PieceFlags::PieceColor::WHITE and new_move_field.y == 4) or
+		(moved_piece.color == PieceFlags::PieceColor::BLACK and new_move_field.y == 3));
 
 	if (is_double_field_move and moved_piece.CheckMove(1)) {
 		SetEnPassantPos(new_move_field.x, new_move_field.y);
@@ -683,22 +696,24 @@ void Board::ChangePlayersTurn() noexcept {
 }
 
 
-void Board::CastleKingChange(sf::Vector2i old_pos, sf::Vector2i new_pos) {
-	ChangePiecePos(pieces_indicator, old_pos, new_pos);
-	
-	if (new_pos.x == 0) {
-		pieces_indicator[new_pos.y][3] =
-			PieceFlags::Indicator{ pieces_indicator[new_pos.y][new_pos.x].color, PieceFlags::PieceType::ROOK };
-	}
-	else {
-		pieces_indicator[new_pos.y][5] = 
-			PieceFlags::Indicator{ pieces_indicator[new_pos.y][new_pos.x].color, PieceFlags::PieceType::ROOK };
-	}
-
-	sounds.castle.play();
+void Board::SetEnPassantPos(const int& x, const int& y) noexcept {
+	en_passant_pos.x = x, en_passant_pos.y = y;
 }
 
 
-void Board::SetEnPassantPos(const int& x, const int& y) noexcept {
-	en_passant_pos.x = x, en_passant_pos.y = y;
+void Board::SetMoveSound(sf::Vector2i new_pos) noexcept {
+	if (pieces_indicator[new_pos.y][new_pos.x].type != PieceFlags::PieceType::EMPTY) {
+		turn_sound = sounds.capture;
+		is_turn_sound = true;
+	}
+	else {
+		turn_sound = sounds.move;
+		is_turn_sound = true;
+	}
+}
+
+
+void Board::SetCastleSound() noexcept {
+	turn_sound = sounds.castle;
+	is_turn_sound = true;
 }

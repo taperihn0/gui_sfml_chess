@@ -14,18 +14,21 @@ public:
 	// kind of init function for end game window
 	void PrepareEndWindow();
 
-	// check mouse position and if the mouse is located in 
-	// any button, just widen it
+	// check mouse position when the starting window is opened 
+	// and if the mouse is located in any button, just widen it
 	void ProcessStartMousePos(sf::Event::MouseMoveEvent pos, bool& run_state);
 
+	// same as above method but when the end window is opened
 	void ProcessEndMousePos(sf::Event::MouseMoveEvent pos);
 
 	// check every mouse press event while the starting window is opened
 	// returns false when need to close the window
 	bool ProcessStartMousePress(sf::Vector2i pos, bool& run_state);
 
+	// again same as above but check when the end window is opened
 	void ProcessEndMousePress(sf::Vector2i pos, bool& run_status);
-
+	
+	// reset current focus button
 	void ResetCurrent();
 
 	sf::Sprite GetMenuWindowSprite();
@@ -40,10 +43,14 @@ private:
 	// init window rectangle texture
 	void InitWindowFrame();
 
+	// cast given mouse pos to a local coordinates system
 	template<typename T>
 	void CastGlobalPos(T& pos);
 
+	// focus a field when the mouse is currently on button
 	void WidenText(sf::Text& txt);
+
+	// unfocus button
 	void NarrowText();
 
 	sf::RenderTexture

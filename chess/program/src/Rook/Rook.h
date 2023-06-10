@@ -3,8 +3,6 @@
 #include "..\Pieces\Piece.h"
 #include "..\Bishop\Bishop.h"
 
-#include <array>
-
 class Rook : virtual public Piece {
 public:
 	Rook() = default;
@@ -14,11 +12,11 @@ public:
 	// return avaible fields for rook - 
 	// kind of straight lines
 	std::vector<sf::Vector2i>&& GetActiveFields(
-		const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
+		const PieceFlags::board_grid_t& pieces_indicator,
 		const sf::Vector2i& pos, bool consider_check = true, bool clear = true) override;
 private:
 	// go through straight line of rook's active fields
-	void ProcessLine(const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
+	void ProcessLine(const PieceFlags::board_grid_t& pieces_indicator,
 		sf::Vector2i pos, const sf::Vector2i& direction) noexcept;
 	
 	struct dim_directions {

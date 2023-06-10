@@ -11,11 +11,11 @@
 #include "..\Queen\Queen.h"
 #include "..\King\King.h"
 
+#include "..\AI\Engine.h"
+
 #include <iostream>
 #include <stdexcept>
-#include <array>
 #include <cstdint>
-#include <memory>
 #include <vector>
 #include <algorithm>
 
@@ -25,10 +25,6 @@ public:
 
 	// arrange starting positions of pieces for both players
 	void PrepareBoard();
-
-	// UNUSED METHOD
-	sf::SoundSource::Status 
-	SoundStatus();
 
 	// draw a piece on his special surface
 	void DrawOnPiecesSurfaceField(sf::Sprite& piece_sprite, sf::Vector2f& window_pos);
@@ -51,25 +47,30 @@ public:
 	void ProcessPressedMouse(const sf::Vector2i& mouse_pos);
 	
 	// zero occuper color of field
-	void ZeroEntireBoardOccuperColor(std::array<std::array<PieceFlags::Indicator, 8>, 8>& board);
+	void ZeroEntireBoardOccuperColor(PieceFlags::board_grid_t& board);
 
 	// set all of the piece occupied fields
 	void SetPieceOccupiedFields(
-		std::array<std::array<PieceFlags::Indicator, 8>, 8>& board,
+		PieceFlags::board_grid_t& board,
 		const PieceFlags::Indicator& piece, const uint8_t& y, const uint8_t& x,
 		bool consider_mate = false);
 
-	// simply move a piece and change his position in apropiate 2d array
+	// simply move a piece and change his position in given 2d array
 	void ChangePiecePos(
-		std::array<std::array<PieceFlags::Indicator, 8>, 8>& board,
-		sf::Vector2i old_pos, sf::Vector2i new_pos, bool play_sound = true) noexcept;
+		PieceFlags::board_grid_t& board,
+		sf::Vector2i old_pos, sf::Vector2i new_pos) noexcept;
+
+	// kind of ChangePiecePos() function, but for king and castling
+	void CastleKingChange(
+		PieceFlags::board_grid_t& board, 
+		sf::Vector2i old_pos, sf::Vector2i new_pos);
 
 	// check whether given coordinates are valid for my board
 	static bool isValidField(const sf::Vector2i& coords) noexcept;
 
 	// is there a mate on a king of a given color?
 	bool CheckKingAttacked(
-		const std::array<std::array<PieceFlags::Indicator, 8>, 8>& board,
+		const PieceFlags::board_grid_t& board,
 		PieceFlags::PieceColor king_color) noexcept;
 
 	// return true whether game is over
@@ -104,7 +105,7 @@ private:
 
 	// move given piece to a given new field - 
 	// occupy empty field or capture enemy piece there
-	void MovePiece(const sf::Vector2i& new_move_field);
+	void MovePiece(const sf::Vector2i old_pos, const sf::Vector2i new_pos);
 
 	// check whether my focus flag is set
 	bool isValidFocused() noexcept;
@@ -142,11 +143,13 @@ private:
 	// whose is turn now
 	void ChangePlayersTurn() noexcept;
 
-	// king of MovePiece() function, but for king and castling
-	void CastleKingChange(sf::Vector2i old_pos, sf::Vector2i new_pos);
-
 	// reset current en passant position
 	void SetEnPassantPos(const int& x, const int& y) noexcept;
+
+	// while any piece is moving or simply capturing
+	void SetMoveSound(sf::Vector2i new_pos) noexcept;
+
+	void SetCastleSound() noexcept;
 
 	struct FieldDataFlag {
 		bool is_found;
@@ -165,11 +168,10 @@ private:
 	std::array<sf::Color, 2> grid_colors;
 
     const uint16_t WINDOW_SIZE, FIELD_SIZE;
-	static constexpr uint8_t BOARD_SIZE = 8;
 
 	std::array<std::array<sf::Vector2f, BOARD_SIZE>, BOARD_SIZE> fields_coordinates;
-	std::array<std::array<PieceFlags::Indicator, BOARD_SIZE>, BOARD_SIZE> pieces_indicator;
-	std::array<std::array<std::unique_ptr<Piece>, 12 + 1>, 2 + 1> pieces_templates;
+	PieceFlags::templates_t pieces_templates;
+	PieceFlags::board_grid_t pieces_indicator;
 
 	sf::Vector2i en_passant_pos,
 		curr_focused_pos,
@@ -186,7 +188,7 @@ private:
 
 	bool is_white_turn;
 
-	std::array<std::array<std::vector<sf::Vector2i>, BOARD_SIZE>, BOARD_SIZE> cache;
+	PieceFlags::av_moves_board_t cache;
 	uint16_t possible_moves;
 
 	struct Audio {
@@ -201,4 +203,6 @@ private:
 	std::array<std::unique_ptr<sf::SoundBuffer>, 6> sbuffers;
 	sf::Sound turn_sound;
 	bool is_turn_sound;
+
+	AI::Engine engine;
 };

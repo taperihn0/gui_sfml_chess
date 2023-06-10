@@ -10,12 +10,12 @@ public:
 
 	// return avaible fields of bishop - just diagonals fields
 	std::vector<sf::Vector2i>&& GetActiveFields(
-		const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
+		const PieceFlags::board_grid_t& pieces_indicator,
 		const sf::Vector2i& pos, bool consider_check = true, bool clear = true) override;
 private:
 	// go through diagonal by doing some calculations on a given direction vector
 	void ProcessDiagonal(
-		const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
+		const PieceFlags::board_grid_t& pieces_indicator,
 		sf::Vector2i pos, const sf::Vector2i& direction) noexcept;
 };
 

@@ -187,10 +187,10 @@ void Menu::PrepareText() {
 	auto bounds(menu_text[0].getLocalBounds());
 	menu_text[0].setPosition((WINDOW_WIDTH - bounds.width) / 2, 180);
 
-	play_button.left = menu_text[0].getPosition().x - 2;
-	play_button.top = menu_text[0].getPosition().y - 2;
+	play_button.left = menu_text[0].getPosition().x - 4;
+	play_button.top = menu_text[0].getPosition().y;
 	play_button.width = bounds.width + 2;
-	play_button.height = bounds.height + 2;
+	play_button.height = bounds.height + 10;
 
 	menu_text[1].setFont(italic_f);
 	menu_text[1].setString("QUIT GAME");
@@ -202,10 +202,10 @@ void Menu::PrepareText() {
 	bounds = menu_text[1].getLocalBounds();
 	menu_text[1].setPosition((WINDOW_WIDTH - bounds.width) / 2, 230);
 
-	quit_button.left = menu_text[1].getPosition().x - 2;
-	quit_button.top = menu_text[1].getPosition().y - 2;
+	quit_button.left = menu_text[1].getPosition().x - 4;
+	quit_button.top = menu_text[1].getPosition().y;
 	quit_button.width = bounds.width + 2;
-	quit_button.height = bounds.height + 2;
+	quit_button.height = bounds.height + 10;
 
 	// end game text
 	end_text[0].setFont(italic_f);
@@ -260,10 +260,10 @@ void Menu::PrepareText() {
 	bounds = end_text[4].getLocalBounds();
 	end_text[4].setPosition((WINDOW_WIDTH - bounds.width) / 2, WINDOW_HEIGHT - 55);
 
-	continue_button.left = end_text[4].getPosition().x - 2;
-	continue_button.top = end_text[4].getPosition().y - 2;
+	continue_button.left = end_text[4].getPosition().x - 4;
+	continue_button.top = end_text[4].getPosition().y;
 	continue_button.width = bounds.width + 2;
-	continue_button.height = bounds.height + 2;
+	continue_button.height = bounds.height + 10;
 }
 
 

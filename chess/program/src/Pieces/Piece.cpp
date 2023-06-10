@@ -30,7 +30,7 @@ void Piece::DrawPiece(sf::Vector2f& window_pos) {
 
 
 bool Piece::CheckFieldFreeValid(
-	const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
+	const PieceFlags::board_grid_t& pieces_indicator,
 	const sf::Vector2i& pos) noexcept {
 	return Board::isValidField(pos) and
 		pieces_indicator[pos.y][pos.x].type == PieceFlags::PieceType::EMPTY;
@@ -38,7 +38,7 @@ bool Piece::CheckFieldFreeValid(
 
 
 bool Piece::CheckCheckSafe(
-	std::array<std::array<PieceFlags::Indicator, 8>, 8> pieces_indicator_cpy,
+	PieceFlags::board_grid_t pieces_indicator_cpy,
 	sf::Vector2i old_pos, sf::Vector2i new_pos) {
 
 	board->ZeroEntireBoardOccuperColor(pieces_indicator_cpy);
@@ -46,10 +46,10 @@ bool Piece::CheckCheckSafe(
 	// simulation of piece's move - if the move won't cause check on king of 
 	// same color as a moving piece, then the move is unvalid
 	// Just moving piece on a copied board and checking if king is under attack
-	board->ChangePiecePos(pieces_indicator_cpy, old_pos, new_pos, false);
+	board->ChangePiecePos(pieces_indicator_cpy, old_pos, new_pos);
 
-	for (uint8_t i = 0; i < 8; i++) {
-		for (uint8_t j = 0; j < 8; j++) {
+	for (uint8_t i = 0; i < BOARD_SIZE; i++) {
+		for (uint8_t j = 0; j < BOARD_SIZE; j++) {
 			if (pieces_indicator_cpy[i][j].type != PieceFlags::PieceType::EMPTY and
 				pieces_indicator_cpy[i][j].color != piece_color) {
 				board->SetPieceOccupiedFields(pieces_indicator_cpy, pieces_indicator_cpy[i][j], i, j, false);
@@ -62,7 +62,7 @@ bool Piece::CheckCheckSafe(
 
 
 void Piece::MarkOccupiedFields(
-	std::array<std::array<PieceFlags::Indicator, 8>, 8>& board,
+	PieceFlags::board_grid_t& board,
 	const sf::Vector2i& pos, bool consider_check) {
 	const auto active_fields(GetActiveFields(board, pos, consider_check));
 
@@ -73,7 +73,7 @@ void Piece::MarkOccupiedFields(
 
 
 bool Piece::CheckFieldOccupied(
-	const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
+	const PieceFlags::board_grid_t& pieces_indicator,
 	const sf::Vector2i& pos, const PieceFlags::PieceColor& piece_color_) noexcept {
 	return Board::isValidField(pos) and
 		pieces_indicator[pos.y][pos.x].type != PieceFlags::PieceType::EMPTY and

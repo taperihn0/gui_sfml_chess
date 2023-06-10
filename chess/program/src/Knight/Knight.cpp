@@ -9,7 +9,7 @@ Knight::Knight(const std::string& texture_path, Board* board_ptr,
 
 
 std::vector<sf::Vector2i>&& Knight::GetActiveFields(
-	const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
+	const PieceFlags::board_grid_t& pieces_indicator,
 	const sf::Vector2i& pos, bool consider_check, bool clear) {
 	if (clear) {
 		avaible_fields.clear();
@@ -40,7 +40,7 @@ std::vector<sf::Vector2i>&& Knight::GetActiveFields(
 
 
 void Knight::AvaibleMovesCaptures(
-	const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
+	const PieceFlags::board_grid_t& pieces_indicator,
 	sf::Vector2i pos) noexcept {
 
 	sf::Vector2i temp_vec(pos.x + directions.d_x, pos.y + directions.d_y);
@@ -53,7 +53,7 @@ void Knight::AvaibleMovesCaptures(
 
 
 bool Knight::CheckMoveCaptureField(
-	const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
+	const PieceFlags::board_grid_t& pieces_indicator,
 	const sf::Vector2i& pos) noexcept {
 	return Board::isValidField(pos) and
 		(pieces_indicator[pos.y][pos.x].type == PieceFlags::PieceType::EMPTY or

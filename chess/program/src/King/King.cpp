@@ -9,7 +9,7 @@ King::King(const std::string& texture_path, Board* board_ptr,
 
 
 std::vector<sf::Vector2i>&& King::GetActiveFields(
-	const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
+	const PieceFlags::board_grid_t& pieces_indicator,
 	const sf::Vector2i& pos, bool consider_check, bool clear) {
 	if (clear) {
 		avaible_fields.clear();
@@ -32,7 +32,7 @@ std::vector<sf::Vector2i>&& King::GetActiveFields(
 
 
 void King::MarkOccupiedFields(
-	std::array<std::array<PieceFlags::Indicator, 8>, 8>& board,
+	PieceFlags::board_grid_t& board,
 	const sf::Vector2i& pos, bool consider_check) {
 	is_check = consider_check;
 	sf::Vector2i new_pos;
@@ -48,7 +48,7 @@ void King::MarkOccupiedFields(
 
 
 bool King::CheckFieldCheckSafeValid(
-	const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
+	const PieceFlags::board_grid_t& pieces_indicator,
 	sf::Vector2i old_pos, sf::Vector2i new_pos) noexcept {
 
 	// check if field is valid and can be captured
@@ -64,14 +64,14 @@ bool King::CheckFieldCheckSafeValid(
 	}
 
 	// prepare copy of current board and then generate all the occupied fields by enemy pieces
-	std::array<std::array<PieceFlags::Indicator, 8>, 8> pieces_indicator_cpy = pieces_indicator;
+	PieceFlags::board_grid_t pieces_indicator_cpy = pieces_indicator;
 
 	board->ZeroEntireBoardOccuperColor(pieces_indicator_cpy);
 
-	board->ChangePiecePos(pieces_indicator_cpy, old_pos, new_pos, false);
+	board->ChangePiecePos(pieces_indicator_cpy, old_pos, new_pos);
 
-	for (uint8_t i = 0; i < 8; i++) {
-		for (uint8_t j = 0; j < 8; j++) {
+	for (uint8_t i = 0; i < BOARD_SIZE; i++) {
+		for (uint8_t j = 0; j < BOARD_SIZE; j++) {
 			if (pieces_indicator_cpy[i][j].type != PieceFlags::PieceType::EMPTY and
 				pieces_indicator_cpy[i][j].color != piece_color) {
 				board->SetPieceOccupiedFields(pieces_indicator_cpy, pieces_indicator_cpy[i][j], i, j, false);
@@ -90,7 +90,7 @@ bool King::CheckFieldCheckSafeValid(
 
 
 void King::CheckAppendCastleMove(
-	const std::array<std::array<PieceFlags::Indicator, 8>, 8>& pieces_indicator,
+	const PieceFlags::board_grid_t& pieces_indicator,
 	sf::Vector2i pos) {
 	if (board->CheckKingAttacked(pieces_indicator, piece_color) or 
 		!pieces_indicator[pos.y][pos.x].CheckMove(0)) {
@@ -118,19 +118,19 @@ void King::CheckAppendCastleMove(
 	}
 
 	// check another side
-	rook_field = pieces_indicator[pos.y][8 - 1];
+	rook_field = pieces_indicator[pos.y][BOARD_SIZE - 1];
 
 	if (rook_field.type == PieceFlags::PieceType::ROOK and
 		rook_field.color == piece_color and rook_field.CheckMove(0)) {
 
-		for (uint8_t x = pos.x + 1; x < 8 - 1; x++) {
+		for (uint8_t x = pos.x + 1; x < BOARD_SIZE - 1; x++) {
 			if (pieces_indicator[pos.y][x].type != PieceFlags::PieceType::EMPTY or
 				CheckFieldOccuped(pieces_indicator[pos.y][x])) {
 				return;
 			}
 		}
 
-		avaible_fields.push_back(sf::Vector2i(8 - 1, pos.y));
+		avaible_fields.push_back(sf::Vector2i(BOARD_SIZE - 1, pos.y));
 	}
 }
 
