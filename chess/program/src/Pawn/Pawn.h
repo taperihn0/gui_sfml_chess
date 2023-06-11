@@ -9,7 +9,7 @@ public:
 
 	// return active fields of path - its move fields in front 
 	// of the pawn and diagonal fields if capture is avaible
-	std::vector<sf::Vector2i>&& GetActiveFields(
+	const std::vector<sf::Vector2i>& GetActiveFields(
 		const PieceFlags::board_grid_t& pieces_indicator,
 		const sf::Vector2i& pos, bool consider_check = true, bool clear = true) override;
 

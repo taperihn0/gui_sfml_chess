@@ -23,14 +23,9 @@ namespace PieceFlags {
 			return move_count == count;
 		}
 
-		void IncrementMoveCount() noexcept {
-			move_count++;
-		};
-
 		PieceColor color;
 		PieceType type;
 		
-		// move_count has to be initialized with false
 		uint8_t move_count;
 
 		struct occuper_color_flags {

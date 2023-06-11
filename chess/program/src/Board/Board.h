@@ -45,7 +45,7 @@ public:
 
 	// process every single click in the area of game window
 	void ProcessPressedMouse(const sf::Vector2i& mouse_pos);
-	
+
 	// zero occuper color of field
 	void ZeroEntireBoardOccuperColor(PieceFlags::board_grid_t& board);
 
@@ -60,7 +60,7 @@ public:
 
 	// kind of ChangePiecePos() function, but for king and castling
 	void CastleKingChange(
-		PieceFlags::board_grid_t& board, 
+		PieceFlags::board_grid_t& board,
 		sf::Vector2i old_pos, sf::Vector2i new_pos);
 
 	// all the problems with en passant capture in one function -
@@ -99,8 +99,7 @@ private:
 	// generating all the possible moves by player who just got a turn
 	// and storing it in cache memory
 	// if the player has no possible moves left, game is over
-	
-	//uint16_t PreGenerateAllMoves();
+	/*uint16_t PreGenerateAllMoves();*/
 
 	// focus after clicking on a piece
 	void FocusPieceField(const PieceFlags::Indicator& picked_piece, const sf::Vector2i& field_pos);
@@ -117,7 +116,7 @@ private:
 
 	// check whether field is in focus fields
 	FieldDataFlag
-	CheckAndGetIfFocused(const sf::Vector2i& coords);
+		CheckAndGetIfFocused(const sf::Vector2i& coords);
 
 	// check whether given color is the same as current color of moving player
 	bool CheckCurrTurnColor(const PieceFlags::PieceColor& color) noexcept;
@@ -139,7 +138,7 @@ private:
 	// update pieces on their alpha surface
 	// and set occupied fields of each piece on the surface
 	void UpdatePiecesSurface();
-	
+
 	// change is_white_turn variable to indicate 
 	// whose is turn now
 	void ChangePlayersTurn() noexcept;
@@ -164,13 +163,13 @@ private:
 	sf::RenderTexture pieces_surface;
 
 	const sf::Color light_field,
-		dark_field, 
+		dark_field,
 		highlighted_field,
 		upgrade_window_color;
 
 	std::array<sf::Color, 2> grid_colors;
 
-    const uint16_t WINDOW_SIZE, FIELD_SIZE;
+	const uint16_t WINDOW_SIZE, FIELD_SIZE;
 
 	std::array<std::array<sf::Vector2f, BOARD_SIZE>, BOARD_SIZE> fields_coordinates;
 	PieceFlags::templates_t pieces_templates;

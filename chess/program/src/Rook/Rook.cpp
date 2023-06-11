@@ -8,7 +8,7 @@ Rook::Rook(const std::string& texture_path, Board* board_ptr,
 {}
 
 
-std::vector<sf::Vector2i>&& Rook::GetActiveFields(
+const std::vector<sf::Vector2i>& Rook::GetActiveFields(
 	const PieceFlags::board_grid_t& pieces_indicator,
 	const sf::Vector2i& pos, bool consider_check, bool clear) {
 	if (clear) {
@@ -21,7 +21,7 @@ std::vector<sf::Vector2i>&& Rook::GetActiveFields(
 		ProcessLine(pieces_indicator, pos, sf::Vector2i(direct.d_x, direct.d_y));
 	}
 
-	return std::move(avaible_fields);
+	return avaible_fields;
 }
 
 
@@ -35,7 +35,6 @@ void Rook::ProcessLine(
 		if (!is_check or CheckCheckSafe(pieces_indicator, pos, temp_vec)) {
 			avaible_fields.push_back(temp_vec);
 		}
-
 		temp_vec += direction;
 	}
 

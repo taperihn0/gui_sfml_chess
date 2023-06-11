@@ -11,7 +11,7 @@ public:
 
 	// return active fields of king - all of the surrounding fields, except those 
 	// controlled by enemy
-	std::vector<sf::Vector2i>&& GetActiveFields(
+	const std::vector<sf::Vector2i>& GetActiveFields(
 		const PieceFlags::board_grid_t& pieces_indicator,
 		const sf::Vector2i& pos, bool consider_check = true, bool clear = true) override;
 
@@ -34,11 +34,6 @@ private:
 		sf::Vector2i pos);
 
 	bool CheckFieldOccuped(PieceFlags::Indicator field);
-
-	// checking if move is legal for king
-	bool CheckCheckSafe(
-		PieceFlags::board_grid_t pieces_indicator_cpy,
-		sf::Vector2i old_pos, sf::Vector2i new_pos);
 	
 	struct dim_directions {
 		int8_t d_x, d_y;

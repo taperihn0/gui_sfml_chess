@@ -8,7 +8,7 @@ Knight::Knight(const std::string& texture_path, Board* board_ptr,
 {}
 
 
-std::vector<sf::Vector2i>&& Knight::GetActiveFields(
+const std::vector<sf::Vector2i>& Knight::GetActiveFields(
 	const PieceFlags::board_grid_t& pieces_indicator,
 	const sf::Vector2i& pos, bool consider_check, bool clear) {
 	if (clear) {
@@ -35,7 +35,7 @@ std::vector<sf::Vector2i>&& Knight::GetActiveFields(
 		std::swap(directions.d_x, directions.d_y);
 	}
 
-	return std::move(avaible_fields);
+	return avaible_fields;
 }
 
 

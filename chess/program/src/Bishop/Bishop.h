@@ -9,7 +9,7 @@ public:
 		const uint16_t& size, bool is_white_flag);
 
 	// return avaible fields of bishop - just diagonals fields
-	std::vector<sf::Vector2i>&& GetActiveFields(
+	const std::vector<sf::Vector2i>& GetActiveFields(
 		const PieceFlags::board_grid_t& pieces_indicator,
 		const sf::Vector2i& pos, bool consider_check = true, bool clear = true) override;
 private:

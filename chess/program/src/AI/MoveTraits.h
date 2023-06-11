@@ -4,6 +4,8 @@
 
 #include "../Indicator.h"
 
+#include <stack>
+
 class Board;
 
 namespace AI {
@@ -20,25 +22,21 @@ namespace AI {
 
 	class MoveTraits {
 	public:
-		MoveTraits(Board* brdclass_ptr, sf::Vector2i& curr_en_passant_, PieceFlags::templates_t* p_templates);
+		MoveTraits(Board* brdclass_ptr, PieceFlags::templates_t* p_templates);
 
 		void MovePiece(
 			PieceFlags::board_grid_t& board, const sf::Vector2i old_pos, const sf::Vector2i new_pos);
 
 		void UnMovePiece(
-			PieceFlags::board_grid_t& board, const sf::Vector2i old_pos, const sf::Vector2i new_pos);
+			PieceFlags::board_grid_t& board, const sf::Vector2i new_pos);
+
+		void SetEnPassantPos(sf::Vector2i brd_en_passant_pos) noexcept;
 	private:
-		void EnPassantCase(PieceFlags::board_grid_t& board, const sf::Vector2i old_pos, const sf::Vector2i new_pos);
-
-		void Reset();
-
-		PieceFlags::Indicator cap_piece;
-		sf::Vector2i castle_pos;
-		bool capture, en_passant, castle;
-
 		Board* const brdclass_ptr;
-
-		sf::Vector2i& board_en_passant;
 		PieceFlags::templates_t* pieces_templates;
+		sf::Vector2i en_passant_pos;
+
+		PieceFlags::board_grid_t old_board;
+		std::stack<sf::Vector2i> prev_en_passant;
 	};
 }

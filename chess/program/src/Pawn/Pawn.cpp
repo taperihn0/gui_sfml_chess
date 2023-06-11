@@ -8,7 +8,7 @@ Pawn::Pawn(const std::string& texture_path, Board* board_ptr,
 {}
 
 
-std::vector<sf::Vector2i>&& Pawn::GetActiveFields(
+const std::vector<sf::Vector2i>& Pawn::GetActiveFields(
 	const PieceFlags::board_grid_t& pieces_indicator,
 	const sf::Vector2i& pos, bool consider_check, bool clear) {
 	if (clear) {
@@ -30,7 +30,7 @@ std::vector<sf::Vector2i>&& Pawn::GetActiveFields(
 	// capturing using en passant
 	CheckAppendEnPassantCapture(pieces_indicator, pos);
 
-	return std::move(avaible_fields);
+	return avaible_fields;
 }
 
 
@@ -106,7 +106,8 @@ void Pawn::CheckAppendEnPassantCapture(
 	const sf::Vector2i& pos) {
 
 	// condition of en passant capture
-	const bool& green_flag = (piece_color == PieceFlags::PieceColor::WHITE and pos.y == 3) or
+	const bool green_flag = 
+		(piece_color == PieceFlags::PieceColor::WHITE and pos.y == 3) or
 		(piece_color == PieceFlags::PieceColor::BLACK and pos.y == 4);
 
 	sf::Vector2i temp_vec;
@@ -141,5 +142,5 @@ bool Pawn::CheckEnPassantPawn(
 		pieces_indicator[pos.y][pos.x].color != piece_color and
 		pieces_indicator[pos.y][pos.x].type == PieceFlags::PieceType::PAWN and
 		pieces_indicator[pos.y][pos.x].CheckMove(1) and
-		brdclass_ptr->GetEnPassantPos() == pos;
+		board->GetEnPassantPos() == pos;
 }

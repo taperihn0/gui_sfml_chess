@@ -1,0 +1,155 @@
+[33mcommit cb789caf32e3561d0659a6aa78443d7f43830cd8[m[33m ([m[1;36mHEAD -> [m[1;32mmaster[m[33m)[m
+Author: taperihno <szymonstar690@gmail.com>
+Date:   Sun Jun 11 13:58:52 2023 +0200
+
+    bugs with checkmate
+
+[33mcommit 2f6aba75da16cf05acb17d296db31823fdf39ca0[m[33m ([m[1;31morigin/master[m[33m)[m
+Author: taperihno <szymonstar690@gmail.com>
+Date:   Sat Jun 10 14:25:06 2023 +0200
+
+    preparation for adding chess engine
+
+[33mcommit 6e6f7391352fb017d3937b5318762e843de845db[m
+Author: taperihno <szymonstar690@gmail.com>
+Date:   Wed Jun 7 21:46:13 2023 +0200
+
+    working simple gui, now to make working score system
+
+[33mcommit c7cf16f83a0eafb5ab0b484fbfa44fd8776cdce5[m
+Author: taperihno <szymonstar690@gmail.com>
+Date:   Tue Jun 6 21:16:28 2023 +0200
+
+    end game window appearing
+
+[33mcommit f1c08f6a3574fca0bf13603e9f1eeab0dff793eb[m
+Author: taperihno <szymonstar690@gmail.com>
+Date:   Mon Jun 5 23:53:03 2023 +0200
+
+    working audio system
+
+[33mcommit da0093b2b997e73612a96ddb93be8372c07dd356[m
+Author: taperihno <szymonstar690@gmail.com>
+Date:   Sun Jun 4 18:19:09 2023 +0200
+
+    checkmate and stealmate system
+
+[33mcommit fc24ff548af013a99293e3133ee623495c6d722d[m
+Author: taperihno <szymonstar690@gmail.com>
+Date:   Sun Jun 4 13:43:51 2023 +0200
+
+    working castle system
+
+[33mcommit 82df3c303113759bad5b60c55ec74f9a59a241a1[m
+Author: taperihno <szymonstar690@gmail.com>
+Date:   Sat Jun 3 14:31:34 2023 +0200
+
+    castling system in progress
+
+[33mcommit a73287b93e28a6c5d8cb8adb5154e7e8f208532b[m
+Author: taperihno <szymonstar690@gmail.com>
+Date:   Sat Jun 3 13:37:34 2023 +0200
+
+    check system and valid king movement
+
+[33mcommit 89fd5bbb475b069848ee9c5fe13f4db60eeee4ef[m
+Author: taperihno <szymonstar690@gmail.com>
+Date:   Sat Jun 3 12:55:26 2023 +0200
+
+    working check system for all the pieces
+
+[33mcommit b062a4d088f5aa7a08d5ea9f6efef865b534a4c6[m
+Author: taperihno <szymonstar690@gmail.com>
+Date:   Sat Jun 3 09:17:43 2023 +0200
+
+    bugged mate system
+
+[33mcommit 2bd0f8393d2f72d20224c444c6c4659672dc52ac[m
+Author: taperihno <szymonstar690@gmail.com>
+Date:   Thu Jun 1 17:37:23 2023 +0200
+
+    fixed en passant capture and entry mate system for pawns.
+
+[33mcommit 5c68c4b5d2a09d4f88412bad1699ca84637c7402[m
+Author: taperihno <szymonstar690@gmail.com>
+Date:   Thu Jun 1 17:15:28 2023 +0200
+
+    fixed en passant bugs and entry mate system for pawns
+
+[33mcommit f312bd74ac48108ac1dc3ea01febd64a10e37fb6[m
+Author: taperihno <szymonstar690@gmail.com>
+Date:   Tue May 30 22:59:59 2023 +0200
+
+    king mate system
+
+[33mcommit f8fd4d2e145666936fa2b29c3b4670f5281d3d38[m
+Author: taperihno <szymonstar690@gmail.com>
+Date:   Tue May 30 19:19:22 2023 +0200
+
+    en passant capture
+
+[33mcommit bcb22e10da4ef61eeb40a84d6a91edfebe9757d7[m
+Author: taperihno <szymonstar690@gmail.com>
+Date:   Mon May 29 23:03:20 2023 +0200
+
+    white and black player turns system
+
+[33mcommit 4b336676582186694afefe3217a7113c312a2df7[m
+Author: taperihno <szymonstar690@gmail.com>
+Date:   Sun May 28 11:25:44 2023 +0200
+
+    fixed pawn upgrading and bugged en passant capturing
+
+[33mcommit b0350da9b3c9493729ac0659994dce673c1db9c6[m
+Author: taperihno <szymonstar690@gmail.com>
+Date:   Sat May 27 17:02:14 2023 +0200
+
+    bugged pawn upgrading
+
+[33mcommit 44d79d9ce069ec405976c3c2d7f8da00563a7b68[m
+Author: taperihno <szymonstar690@gmail.com>
+Date:   Fri May 26 19:23:27 2023 +0200
+
+    Moving and capturing system for all the pieces but error when closing window while the focus piece is set
+
+[33mcommit 0baa7965947907ba4e0ccf3d55803604d98f169d[m
+Author: taperihno <szymonstar690@gmail.com>
+Date:   Thu May 25 23:57:50 2023 +0200
+
+    Init system of showing active fields, moving and capturing for pawns and broken system of showing active fields for knights.
+
+[33mcommit 360d75b9a310daba2c013595243361ea3489e3b0[m
+Author: taperihno <szymonstar690@gmail.com>
+Date:   Tue May 23 21:15:09 2023 +0200
+
+    working focus system for standing piece, without moving mechanics yet
+
+[33mcommit 0f1a8fa0d1e719182850f267797b397c742bc2d0[m
+Author: taperihno <szymonstar690@gmail.com>
+Date:   Tue May 23 16:36:58 2023 +0200
+
+    init piece focus system
+
+[33mcommit a3a47ad90ab47fd456be1400d75f6bec19b38682[m
+Author: taperihno <szymonstar690@gmail.com>
+Date:   Mon May 22 23:27:17 2023 +0200
+
+    Plain board with standing pieces
+
+[33mcommit 5faf944bbba5518459c0d67c0ae1bfefc7b5a5d8[m
+Author: taperihno <szymonstar690@gmail.com>
+Date:   Sun May 21 16:59:52 2023 +0200
+
+    init
+
+[33mcommit 4943d9dc12325781964cc4b954b2edb33e84138b[m
+Author: taperihno <szymonstar690@gmail.com>
+Date:   Sat May 20 23:18:48 2023 +0200
+
+    Add project files.
+
+[33mcommit 5f6e620c78038dc6c3b5590c120d3c997eddf6c3[m
+Author: taperihno <szymonstar690@gmail.com>
+Date:   Sat May 20 23:18:45 2023 +0200
+
+    Add .gitattributes, .gitignore, and README.md.
