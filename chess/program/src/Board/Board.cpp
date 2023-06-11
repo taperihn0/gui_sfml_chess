@@ -18,7 +18,7 @@ Board::Board(const uint16_t& window_size, const bool& show_console_board_)
 	upgrading_color(PieceFlags::PieceColor::EMPTY),
 	upgrading_x_pos(UINT8_MAX),
 	is_white_turn(true), 
-	possible_moves(UINT16_MAX),
+	possible_moves(0),
 	is_turn_sound(false),
 	engine(pieces_indicator, this, &pieces_templates) {
 
@@ -65,7 +65,6 @@ void Board::PrepareBoard() {
 
 	is_white_turn = true;
 	render_board.draw(sf::Sprite(plain_board.getTexture()));
-	possible_moves = PreGenerateAllMoves();
 }
 
 
@@ -138,8 +137,8 @@ void Board::ProcessPressedMouse(const sf::Vector2i& mouse_pos) {
 		UnfocusPieceField(curr_focused_pos);
 
 		// bot's response
-		auto pos_change(engine.GenerateBestMove(cache, 3, false));
-		MovePiece(pos_change.old_pos, pos_change.new_pos);
+		//auto pos_change(engine.GenerateBestMove(cache, 3, false));
+		//MovePiece(pos_change.old_pos, pos_change.new_pos);
 	}
 }
 
@@ -299,11 +298,24 @@ void Board::LocatePieceOnSurface(const uint8_t& y, const uint8_t& x) {
 	pieces_templates[static_cast<int>(piece.color)][static_cast<int>(piece.type)]->
 		DrawPiece(fields_coordinates[y][x]);
 
-	SetPieceOccupiedFields(pieces_indicator, piece, y, x);
+	if (piece.type == PieceFlags::PieceType::EMPTY or
+		piece.color != static_cast<PieceFlags::PieceColor>(2 - is_white_turn)) {
+		return;
+	}
+
+	const auto&& active_fields(
+		pieces_templates[static_cast<int>(piece.color)][static_cast<int>(piece.type)]->GetActiveFields(pieces_indicator, sf::Vector2i(x, y)));
+
+	for (const auto& field : active_fields) {
+		pieces_templates[static_cast<int>(piece.color)][static_cast<int>(piece.type)]->MarkSingleOccupied(pieces_indicator[field.y][field.x]);
+	}
+
+	cache[y][x] = active_fields;
+	possible_moves += static_cast<uint16_t>(cache[y][x].size());
 }
 
 
-uint16_t Board::PreGenerateAllMoves() {
+/*uint16_t Board::PreGenerateAllMoves() {
 	auto turn_col(static_cast<PieceFlags::PieceColor>(2 - is_white_turn));
 	PieceFlags::Indicator piece;
 	uint16_t moves_number(0);
@@ -327,6 +339,7 @@ uint16_t Board::PreGenerateAllMoves() {
 
 	return moves_number;
 }
+*/
 
 
 void Board::FocusPieceField(const PieceFlags::Indicator& picked_piece, const sf::Vector2i& field_pos) {
@@ -401,9 +414,16 @@ void Board::MovePiece(const sf::Vector2i old_pos, const sf::Vector2i new_pos) {
 	moved_piece = pieces_indicator[new_pos.y][new_pos.x];
 
 	if (moved_piece.type == PieceFlags::PieceType::PAWN) {
-		EnPassantCase(new_pos, moved_piece);
-	}
+		const auto d(
+			dynamic_cast<Pawn*>(pieces_templates[static_cast<int>(moved_piece.color)][static_cast<int>(moved_piece.type)].get())->
+			GetDirection());
 
+		SetEnPassantSound(sf::Vector2i(new_pos.x, new_pos.y - d));
+		auto new_en_passant_pos(EnPassantCase(pieces_indicator, new_pos, moved_piece, d));
+
+		SetEnPassantPos(new_en_passant_pos);
+	}
+	
 	CheckUpdateIfKingMove(new_pos);
 	ChangePlayersTurn();
 	UpdatePiecesSurface();
@@ -424,8 +444,6 @@ void Board::MovePiece(const sf::Vector2i old_pos, const sf::Vector2i new_pos) {
 	if (is_upgrade) {
 		OpenPawnUpgradeWindow(new_pos);
 	}
-
-	possible_moves = PreGenerateAllMoves();
 }
 
 
@@ -440,9 +458,8 @@ void Board::ZeroEntireBoardOccuperColor(PieceFlags::board_grid_t& board) {
 
 
 void Board::SetPieceOccupiedFields(
-	PieceFlags::board_grid_t& board,
-	const PieceFlags::Indicator& piece, const uint8_t& y, const uint8_t& x, bool consider_mate) {
-	pieces_templates[static_cast<int>(piece.color)][static_cast<int>(piece.type)]->MarkOccupiedFields(board, sf::Vector2i(x, y), consider_mate);
+	PieceFlags::board_grid_t& board, const uint8_t& y, const uint8_t& x, bool consider_mate) {
+	pieces_templates[static_cast<int>(board[y][x].color)][static_cast<int>(board[y][x].type)]->MarkOccupiedFields(board, sf::Vector2i(x, y), consider_mate);
 }
 
 
@@ -457,6 +474,28 @@ void Board::ChangePiecePos(
 	// clear his last position
 	board[old_pos.y][old_pos.x] =
 		PieceFlags::Indicator{ PieceFlags::PieceColor::EMPTY, PieceFlags::PieceType::EMPTY, 0 };
+}
+
+
+sf::Vector2i Board::EnPassantCase(
+	PieceFlags::board_grid_t& board, const sf::Vector2i new_pos, const PieceFlags::Indicator moved_piece, const int8_t d) {
+	
+	// capturing pawn using en passant
+	if (new_pos.y - d == en_passant_pos.y) {
+		pieces_indicator[new_pos.y - d][new_pos.x] =
+			PieceFlags::Indicator{ PieceFlags::PieceColor::EMPTY, PieceFlags::PieceType::EMPTY };
+	}
+
+	// setting en passant position
+	const bool is_double_field_move(
+		(moved_piece.color == PieceFlags::PieceColor::WHITE and new_pos.y == 4) or
+		(moved_piece.color == PieceFlags::PieceColor::BLACK and new_pos.y == 3));
+
+	if (is_double_field_move and moved_piece.CheckMove(1)) {
+		return { new_pos.x, new_pos.y };
+	}
+
+	return { -1, -1 };
 }
 
 
@@ -602,7 +641,7 @@ void Board::PickPieceOnWindow(const sf::Vector2i& pos) {
 			PieceFlags::Indicator{ upgrading_color, list_of_window_pieces[(BOARD_SIZE - 1) - pos.y] };;
 	}
 
-	possible_moves = PreGenerateAllMoves();
+	//possible_moves = PreGenerateAllMoves();
 	UpdatePiecesSurface();
 	is_pawn_upgrade_window = false;
 }
@@ -619,41 +658,10 @@ void Board::UpdateBoard() {
 }
 
 
-void Board::EnPassantCase(const sf::Vector2i& new_move_field, const PieceFlags::Indicator& moved_piece) {
-	const auto d(
-		dynamic_cast<Pawn*>(pieces_templates[static_cast<int>(moved_piece.color)][static_cast<int>(moved_piece.type)].get())->
-		GetDirection());
-
-	auto& captured(pieces_indicator[new_move_field.y - d][new_move_field.x]);
-
-	if (captured.type != PieceFlags::PieceType::EMPTY) {
-		turn_sound = sounds.capture;
-		is_turn_sound = true;
-	}
-
-	// capturing pawn using en passant
-	if (new_move_field.y - d == en_passant_pos.y) {
-		captured =
-			PieceFlags::Indicator{ PieceFlags::PieceColor::EMPTY, PieceFlags::PieceType::EMPTY };
-	}
-
-	// setting en passant position
-	const bool is_double_field_move(
-		(moved_piece.color == PieceFlags::PieceColor::WHITE and new_move_field.y == 4) or
-		(moved_piece.color == PieceFlags::PieceColor::BLACK and new_move_field.y == 3));
-
-	if (is_double_field_move and moved_piece.CheckMove(1)) {
-		SetEnPassantPos(new_move_field.x, new_move_field.y);
-	}
-	else {
-		SetEnPassantPos(-1, -1);
-	}
-}
-
-
 void Board::UpdatePiecesSurface() {
 	pieces_surface.clear(sf::Color::Color(0, 0, 0, 0));
 	ZeroEntireBoardOccuperColor(pieces_indicator);
+	possible_moves = 0;
 
 	for (uint8_t i = 0; i < BOARD_SIZE; i++) {
 		for (uint8_t j = 0; j < BOARD_SIZE; j++) {
@@ -696,8 +704,8 @@ void Board::ChangePlayersTurn() noexcept {
 }
 
 
-void Board::SetEnPassantPos(const int& x, const int& y) noexcept {
-	en_passant_pos.x = x, en_passant_pos.y = y;
+void Board::SetEnPassantPos(const sf::Vector2i new_pos) noexcept {
+	en_passant_pos = new_pos;
 }
 
 
@@ -716,4 +724,12 @@ void Board::SetMoveSound(sf::Vector2i new_pos) noexcept {
 void Board::SetCastleSound() noexcept {
 	turn_sound = sounds.castle;
 	is_turn_sound = true;
+}
+
+
+void Board::SetEnPassantSound(sf::Vector2i pos) noexcept {
+	if (pieces_indicator[pos.y][pos.x].type == PieceFlags::PieceType::PAWN) {
+		turn_sound = sounds.capture;
+		is_turn_sound = true;
+	}
 }

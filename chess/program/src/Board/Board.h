@@ -51,9 +51,7 @@ public:
 
 	// set all of the piece occupied fields
 	void SetPieceOccupiedFields(
-		PieceFlags::board_grid_t& board,
-		const PieceFlags::Indicator& piece, const uint8_t& y, const uint8_t& x,
-		bool consider_mate = false);
+		PieceFlags::board_grid_t& board, const uint8_t& y, const uint8_t& x, bool consider_mate = false);
 
 	// simply move a piece and change his position in given 2d array
 	void ChangePiecePos(
@@ -64,6 +62,12 @@ public:
 	void CastleKingChange(
 		PieceFlags::board_grid_t& board, 
 		sf::Vector2i old_pos, sf::Vector2i new_pos);
+
+	// all the problems with en passant capture in one function -
+	// capturing and updating current pawn which can be captured using en passant technique
+	// return updated en passant pos
+	sf::Vector2i EnPassantCase(
+		PieceFlags::board_grid_t& board, const sf::Vector2i new_pos, const PieceFlags::Indicator moved_piece, const int8_t d);
 
 	// check whether given coordinates are valid for my board
 	static bool isValidField(const sf::Vector2i& coords) noexcept;
@@ -95,7 +99,8 @@ private:
 	// generating all the possible moves by player who just got a turn
 	// and storing it in cache memory
 	// if the player has no possible moves left, game is over
-	uint16_t PreGenerateAllMoves();
+	
+	//uint16_t PreGenerateAllMoves();
 
 	// focus after clicking on a piece
 	void FocusPieceField(const PieceFlags::Indicator& picked_piece, const sf::Vector2i& field_pos);
@@ -131,10 +136,6 @@ private:
 	// updating render_board sprite
 	void UpdateBoard();
 
-	// all the problems with en passant capture in one function -
-	// capturing and updating current pawn which can be captured using en passant technique
-	void EnPassantCase(const sf::Vector2i& new_move_field, const PieceFlags::Indicator& moved_piece);
-
 	// update pieces on their alpha surface
 	// and set occupied fields of each piece on the surface
 	void UpdatePiecesSurface();
@@ -144,12 +145,14 @@ private:
 	void ChangePlayersTurn() noexcept;
 
 	// reset current en passant position
-	void SetEnPassantPos(const int& x, const int& y) noexcept;
+	void SetEnPassantPos(const sf::Vector2i new_pos) noexcept;
 
 	// while any piece is moving or simply capturing
 	void SetMoveSound(sf::Vector2i new_pos) noexcept;
 
 	void SetCastleSound() noexcept;
+
+	void SetEnPassantSound(sf::Vector2i pos) noexcept;
 
 	struct FieldDataFlag {
 		bool is_found;

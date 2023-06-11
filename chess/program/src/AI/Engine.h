@@ -31,6 +31,7 @@ namespace AI {
 
 		PieceFlags::board_grid_t& rboard;
 		Board* const brdclass_ptr;
+		sf::Vector2i curr_en_passant;
 
 		const PieceFlags::templates_t* const pieces_templates;
 

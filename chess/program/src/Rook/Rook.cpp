@@ -31,9 +31,11 @@ void Rook::ProcessLine(
 
 	sf::Vector2i temp_vec(pos + direction);
 
-	while (CheckFieldFreeValid(pieces_indicator, temp_vec) and
-		(!is_check or CheckCheckSafe(pieces_indicator, pos, temp_vec))) {
-		avaible_fields.push_back(temp_vec);
+	while (CheckFieldFreeValid(pieces_indicator, temp_vec)) {
+		if (!is_check or CheckCheckSafe(pieces_indicator, pos, temp_vec)) {
+			avaible_fields.push_back(temp_vec);
+		}
+
 		temp_vec += direction;
 	}
 

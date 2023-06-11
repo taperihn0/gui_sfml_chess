@@ -3,7 +3,7 @@
 
 Piece::Piece(const std::string& texture_path, Board* board_ptr,
 	const uint16_t& size, const PieceFlags::PieceColor& piece_color_)
-	: board(board_ptr), 
+	: brdclass_ptr(board_ptr),
 	piece_color(piece_color_), 
 	piece_texture_path(texture_path),
 	piece_texture_ptr(std::make_unique<sf::Texture>()) {
@@ -25,7 +25,7 @@ void Piece::PreparePieceTexture(const uint16_t& size) {
 
 
 void Piece::DrawPiece(sf::Vector2f& window_pos) {
-	board->DrawOnPiecesSurfaceField(piece_sprite, window_pos);
+	brdclass_ptr->DrawOnPiecesSurfaceField(piece_sprite, window_pos);
 }
 
 
@@ -41,23 +41,23 @@ bool Piece::CheckCheckSafe(
 	PieceFlags::board_grid_t pieces_indicator_cpy,
 	sf::Vector2i old_pos, sf::Vector2i new_pos) {
 
-	board->ZeroEntireBoardOccuperColor(pieces_indicator_cpy);
+	brdclass_ptr->ZeroEntireBoardOccuperColor(pieces_indicator_cpy);
 
 	// simulation of piece's move - if the move won't cause check on king of 
 	// same color as a moving piece, then the move is unvalid
-	// Just moving piece on a copied board and checking if king is under attack
-	board->ChangePiecePos(pieces_indicator_cpy, old_pos, new_pos);
+	// just moving piece on a copied board and checking if king is under attack
+	brdclass_ptr->ChangePiecePos(pieces_indicator_cpy, old_pos, new_pos);
 
 	for (uint8_t i = 0; i < BOARD_SIZE; i++) {
 		for (uint8_t j = 0; j < BOARD_SIZE; j++) {
 			if (pieces_indicator_cpy[i][j].type != PieceFlags::PieceType::EMPTY and
 				pieces_indicator_cpy[i][j].color != piece_color) {
-				board->SetPieceOccupiedFields(pieces_indicator_cpy, pieces_indicator_cpy[i][j], i, j, false);
+				brdclass_ptr->SetPieceOccupiedFields(pieces_indicator_cpy, i, j, false);
 			}
 		}
 	}
 
-	return !board->CheckKingAttacked(pieces_indicator_cpy, piece_color);
+	return !brdclass_ptr->CheckKingAttacked(pieces_indicator_cpy, piece_color);
 }
 
 

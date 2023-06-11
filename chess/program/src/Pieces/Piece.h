@@ -12,6 +12,7 @@ class Piece {
 public:
 	Piece(const std::string& texture_path, Board* board_ptr,
 		const uint16_t& size, const PieceFlags::PieceColor& piece_color_);
+	virtual ~Piece() = default;
 
 	// just load necessery resources from hard drive 
 	void PreparePieceTexture(const uint16_t &size);
@@ -46,15 +47,13 @@ public:
 		PieceFlags::board_grid_t pieces_indicator_cpy,
 		sf::Vector2i old_pos, sf::Vector2i new_pos);
 
-	virtual ~Piece() = default;
-protected:
 	// set an occuper color of the given field
 	void MarkSingleOccupied(PieceFlags::Indicator& field) noexcept;
-
+protected:
 	sf::Sprite piece_sprite;
 	std::vector<sf::Vector2i> avaible_fields;
 	
-	Board* const board;
+	Board* const brdclass_ptr;
 
 	const PieceFlags::PieceColor piece_color;
 

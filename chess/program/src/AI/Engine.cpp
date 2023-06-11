@@ -4,9 +4,10 @@
 AI::Engine::Engine(PieceFlags::board_grid_t& board_ref, Board* brd_ptr, PieceFlags::templates_t* p_templates)
 	: rboard(board_ref),
 	brdclass_ptr(brd_ptr),
+	curr_en_passant(-1, -1),
 	pieces_templates(p_templates),
 	weights{ 0, 1, 3, 3, 5, 90 },
-	move_hlp(brd_ptr) {
+	move_hlp(brd_ptr, curr_en_passant, p_templates) {
 	InitSquareTables();
 }
 
@@ -164,12 +165,12 @@ int16_t AI::Engine::Eval(PieceFlags::board_grid_t& board) {
 		for (uint8_t j = 0; j < BOARD_SIZE; j++) {
 			if (board[i][j].color == PieceFlags::PieceColor::WHITE) {
 				eval += 20 * weights[static_cast<int>(board[i][j].type)];
+				eval += square_table[static_cast<int>(board[i][j].type)][i][j];
 			}
 			else {
 				eval -= 20 * weights[static_cast<int>(board[i][j].type)];
+				eval -= square_table[static_cast<int>(board[i][j].type)][BOARD_SIZE - i - 1][BOARD_SIZE - j - 1];
 			}
-
-			square_table[static_cast<int>(board[i][j].type)][i][j];
 		}
 	}
 

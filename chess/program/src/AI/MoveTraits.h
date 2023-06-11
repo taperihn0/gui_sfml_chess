@@ -20,7 +20,7 @@ namespace AI {
 
 	class MoveTraits {
 	public:
-		MoveTraits(Board* brdclass_ptr);
+		MoveTraits(Board* brdclass_ptr, sf::Vector2i& curr_en_passant_, PieceFlags::templates_t* p_templates);
 
 		void MovePiece(
 			PieceFlags::board_grid_t& board, const sf::Vector2i old_pos, const sf::Vector2i new_pos);
@@ -28,11 +28,17 @@ namespace AI {
 		void UnMovePiece(
 			PieceFlags::board_grid_t& board, const sf::Vector2i old_pos, const sf::Vector2i new_pos);
 	private:
+		void EnPassantCase(PieceFlags::board_grid_t& board, const sf::Vector2i old_pos, const sf::Vector2i new_pos);
+
 		void Reset();
 
 		PieceFlags::Indicator cap_piece;
+		sf::Vector2i castle_pos;
 		bool capture, en_passant, castle;
 
 		Board* const brdclass_ptr;
+
+		sf::Vector2i& board_en_passant;
+		PieceFlags::templates_t* pieces_templates;
 	};
 }

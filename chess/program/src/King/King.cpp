@@ -62,37 +62,14 @@ bool King::CheckFieldCheckSafeValid(
 	else if (!is_check) {
 		return true;
 	}
-
-	// prepare copy of current board and then generate all the occupied fields by enemy pieces
-	PieceFlags::board_grid_t pieces_indicator_cpy = pieces_indicator;
-
-	board->ZeroEntireBoardOccuperColor(pieces_indicator_cpy);
-
-	board->ChangePiecePos(pieces_indicator_cpy, old_pos, new_pos);
-
-	for (uint8_t i = 0; i < BOARD_SIZE; i++) {
-		for (uint8_t j = 0; j < BOARD_SIZE; j++) {
-			if (pieces_indicator_cpy[i][j].type != PieceFlags::PieceType::EMPTY and
-				pieces_indicator_cpy[i][j].color != piece_color) {
-				board->SetPieceOccupiedFields(pieces_indicator_cpy, pieces_indicator_cpy[i][j], i, j, false);
-			}
-		}
-	}
-
-	// decide if the king is safe
-	const auto& new_field(pieces_indicator_cpy[new_pos.y][new_pos.x]);
-
-	if (piece_color == PieceFlags::PieceColor::WHITE) {
-		return !new_field.occuping_color.black;
-	}
-	return !new_field.occuping_color.white;
+	return CheckCheckSafe(pieces_indicator, old_pos, new_pos);
 }
 
 
 void King::CheckAppendCastleMove(
 	const PieceFlags::board_grid_t& pieces_indicator,
 	sf::Vector2i pos) {
-	if (board->CheckKingAttacked(pieces_indicator, piece_color) or 
+	if (brdclass_ptr->CheckKingAttacked(pieces_indicator, piece_color) or
 		!pieces_indicator[pos.y][pos.x].CheckMove(0)) {
 		return;
 	}
@@ -140,4 +117,32 @@ bool King::CheckFieldOccuped(PieceFlags::Indicator field) {
 		return field.occuping_color.black;
 	}
 	return field.occuping_color.white;
+}
+
+
+bool King::CheckCheckSafe(
+	PieceFlags::board_grid_t pieces_indicator_cpy,
+	sf::Vector2i old_pos, sf::Vector2i new_pos) {
+
+	// prepare copy of current board and then generate all the occupied fields by enemy pieces
+	brdclass_ptr->ZeroEntireBoardOccuperColor(pieces_indicator_cpy);
+
+	brdclass_ptr->ChangePiecePos(pieces_indicator_cpy, old_pos, new_pos);
+
+	for (uint8_t i = 0; i < BOARD_SIZE; i++) {
+		for (uint8_t j = 0; j < BOARD_SIZE; j++) {
+			if (pieces_indicator_cpy[i][j].type != PieceFlags::PieceType::EMPTY and
+				pieces_indicator_cpy[i][j].color != piece_color) {
+				brdclass_ptr->SetPieceOccupiedFields(pieces_indicator_cpy, i, j, false);
+			}
+		}
+	}
+
+	// decide if the king is safe
+	const auto& new_field(pieces_indicator_cpy[new_pos.y][new_pos.x]);
+
+	if (piece_color == PieceFlags::PieceColor::WHITE) {
+		return !new_field.occuping_color.black;
+	}
+	return !new_field.occuping_color.white;
 }

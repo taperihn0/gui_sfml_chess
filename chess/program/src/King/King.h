@@ -34,6 +34,11 @@ private:
 		sf::Vector2i pos);
 
 	bool CheckFieldOccuped(PieceFlags::Indicator field);
+
+	// checking if move is legal for king
+	bool CheckCheckSafe(
+		PieceFlags::board_grid_t pieces_indicator_cpy,
+		sf::Vector2i old_pos, sf::Vector2i new_pos);
 	
 	struct dim_directions {
 		int8_t d_x, d_y;
