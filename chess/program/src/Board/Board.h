@@ -21,7 +21,7 @@
 
 class Board {
 public:
-	Board(const uint16_t& window_size, const bool& show_console_board_);
+	Board(const uint16_t& window_size);
 
 	// arrange starting positions of pieces for both players
 	void PrepareBoard();
@@ -61,7 +61,7 @@ public:
 	// kind of ChangePiecePos() function, but for king and castling
 	void CastleKingChange(
 		PieceFlags::board_grid_t& board,
-		sf::Vector2i old_pos, sf::Vector2i new_pos);
+		sf::Vector2i old_pos, sf::Vector2i& new_pos);
 
 	// all the problems with en passant capture in one function -
 	// capturing and updating current pawn which can be captured using en passant technique
@@ -109,7 +109,7 @@ private:
 
 	// move given piece to a given new field - 
 	// occupy empty field or capture enemy piece there
-	void MovePiece(const sf::Vector2i old_pos, const sf::Vector2i new_pos);
+	void MovePiece(const sf::Vector2i old_pos, sf::Vector2i new_pos);
 
 	// check whether my focus flag is set
 	bool isValidFocused() noexcept;
@@ -181,8 +181,6 @@ private:
 	std::vector<sf::Vector2i> active_focused_field;
 
 	std::array<PieceFlags::PieceType, 4> list_of_window_pieces;
-
-	const bool show_console_board;
 
 	bool is_pawn_upgrade_window;
 	PieceFlags::PieceColor upgrading_color;

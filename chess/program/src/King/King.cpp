@@ -80,7 +80,7 @@ bool King::CheckFieldCheckSafeValid(
 	}
 
 	// decide if the king is safe
-	const auto& new_field(pieces_indicator_cpy[new_pos.y][new_pos.x]);
+	const auto new_field(pieces_indicator_cpy[new_pos.y][new_pos.x]);
 
 	if (piece_color == PieceFlags::PieceColor::WHITE) {
 		return !new_field.occuping_color.black;

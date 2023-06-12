@@ -10,7 +10,7 @@ AI::MoveTraits::MoveTraits(Board* brd_ptr, PieceFlags::templates_t* p_templates)
 
 
 void AI::MoveTraits::MovePiece(
-	PieceFlags::board_grid_t& board, const sf::Vector2i old_pos, const sf::Vector2i new_pos) {
+	PieceFlags::board_grid_t& board, const sf::Vector2i old_pos, sf::Vector2i new_pos) {
 	old_board = board;
 	sf::Vector2i enpsnt_sngle_case(-1, -1);
 	prev_en_passant.push(en_passant_pos);

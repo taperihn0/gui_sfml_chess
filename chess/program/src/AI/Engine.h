@@ -16,7 +16,7 @@ namespace AI {
 
 		Engine(PieceFlags::board_grid_t& board_ref, Board* brd_ptr, PieceFlags::templates_t* p_templates);
 
-		PieceFlags::board_grid_t
+		piece_pos_change
 		GenerateBestMove(
 			const PieceFlags::av_moves_board_t& m_board, uint8_t depth, bool is_white_turn, sf::Vector2i en_passant_pos);
 	private:

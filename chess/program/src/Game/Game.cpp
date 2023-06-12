@@ -1,9 +1,10 @@
 #include "Game.h"
 
-Game::Game(const sf::VideoMode& window_video_mode, const sf::String& window_title,
-	bool show_console_board, const sf::Uint32& style)
+Game::Game(
+	const sf::VideoMode& window_video_mode, const sf::String& window_title,
+	const sf::Uint32& style)
 	: window(window_video_mode, window_title, style),
-	board(window_video_mode.width, show_console_board),
+	board(window_video_mode.width),
 	menu(window_video_mode.width),
 	run_status(false)
 {}

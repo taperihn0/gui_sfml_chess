@@ -11,7 +11,7 @@ AI::Engine::Engine(PieceFlags::board_grid_t& board_ref, Board* brd_ptr, PieceFla
 }
 
 
-PieceFlags::board_grid_t
+AI::piece_pos_change
 AI::Engine::GenerateBestMove(
 	const PieceFlags::av_moves_board_t& m_board, uint8_t depth, bool is_white_turn, sf::Vector2i en_passant_pos) {
 	auto turn_col(static_cast<PieceFlags::PieceColor>(2 - is_white_turn));
@@ -32,7 +32,8 @@ AI::Engine::GenerateBestMove(
 	}
 
 	int16_t best_pos_eval = is_white_turn ? INT16_MIN : INT16_MAX;
-	PieceFlags::board_grid_t final_board{}, board_cpy(rboard);
+	piece_pos_change final_move;
+	PieceFlags::board_grid_t board_cpy(rboard);
 
 	for (const auto& pos_change : legal_moves) {
 		move_hlp.MovePiece(board_cpy, pos_change.old_pos, pos_change.new_pos);
@@ -40,15 +41,15 @@ AI::Engine::GenerateBestMove(
 		auto move_eval(SearchEvalMove(board_cpy, depth - 1, is_white_turn));
 
 		if (CompEvals(best_pos_eval, move_eval, is_white_turn)) {
-			final_board = board_cpy;
+			final_move = pos_change;
 			best_pos_eval = move_eval;
 		}
 
 		move_hlp.UnMovePiece(board_cpy, pos_change.new_pos);
 	}
 
-	// return chosen best move an a board
-	return final_board;
+	// return chosen best move
+	return final_move;
 }
 
 

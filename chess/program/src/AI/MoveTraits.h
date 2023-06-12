@@ -25,7 +25,7 @@ namespace AI {
 		MoveTraits(Board* brdclass_ptr, PieceFlags::templates_t* p_templates);
 
 		void MovePiece(
-			PieceFlags::board_grid_t& board, const sf::Vector2i old_pos, const sf::Vector2i new_pos);
+			PieceFlags::board_grid_t& board, const sf::Vector2i old_pos, sf::Vector2i new_pos);
 
 		void UnMovePiece(
 			PieceFlags::board_grid_t& board, const sf::Vector2i new_pos);

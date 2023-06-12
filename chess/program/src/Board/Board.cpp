@@ -1,6 +1,13 @@
 #include "Board.h"
 
-Board::Board(const uint16_t& window_size, const bool& show_console_board_)
+#ifdef PR_DEBUG
+#define LOG(x) std::cout << x;
+#else
+#define LOG(x) 
+#endif
+
+
+Board::Board(const uint16_t& window_size)
 	: light_field(sf::Color::Color(196, 164, 132)),
 	dark_field(sf::Color::Color(128, 70, 27)),
 	highlighted_field(sf::Color::Color(240, 221, 115, 120)),
@@ -13,7 +20,6 @@ Board::Board(const uint16_t& window_size, const bool& show_console_board_)
 	black_king_pos(4, 0),
 	white_king_pos(4, BOARD_SIZE - 1),
 	grid_colors{ light_field, dark_field },
-	show_console_board(show_console_board_),
 	is_pawn_upgrade_window(false),
 	upgrading_color(PieceFlags::PieceColor::EMPTY),
 	upgrading_x_pos(UINT8_MAX),
@@ -137,11 +143,10 @@ void Board::ProcessPressedMouse(const sf::Vector2i& mouse_pos) {
 		UnfocusPieceField(curr_focused_pos);
 
 		// bot's response
-		const auto bot_move_board(engine.GenerateBestMove(cache, 3, false, en_passant_pos));
-		pieces_indicator = bot_move_board;
+		//const auto bot_move(engine.GenerateBestMove(cache, 1, false, en_passant_pos));
 
-		UpdatePiecesSurface();
-		is_white_turn = true;
+		//MovePiece(bot_move.old_pos, bot_move.new_pos);
+		//is_white_turn = true;
 	}
 }
 
@@ -398,7 +403,7 @@ void Board::UnfocusPieceField(const sf::Vector2i& field_pos) {
 }
 
 
-void Board::MovePiece(const sf::Vector2i old_pos, const sf::Vector2i new_pos) {
+void Board::MovePiece(const sf::Vector2i old_pos, sf::Vector2i new_pos) {
 	auto moved_piece(pieces_indicator[old_pos.y][old_pos.x]),
 		old_piece(pieces_indicator[new_pos.y][new_pos.x]);
 
@@ -507,17 +512,29 @@ sf::Vector2i Board::EnPassantCase(
 
 void Board::CastleKingChange(
 	PieceFlags::board_grid_t& board,
-	sf::Vector2i old_pos, sf::Vector2i new_pos) {
-	ChangePiecePos(board, old_pos, new_pos);
+	sf::Vector2i old_pos, sf::Vector2i& new_pos) {
+
+	board[new_pos.y][new_pos.x] =
+		PieceFlags::Indicator();
 
 	if (new_pos.x == 0) {
+		new_pos = sf::Vector2i(1, new_pos.y);
+
+		board[new_pos.y][new_pos.x] = board[old_pos.y][old_pos.x];
+
 		board[new_pos.y][3] =
 			PieceFlags::Indicator{ board[new_pos.y][new_pos.x].color, PieceFlags::PieceType::ROOK };
 	}
 	else {
+		new_pos = sf::Vector2i(BOARD_SIZE - 2, new_pos.y);
+
+		board[new_pos.y][new_pos.x] = board[old_pos.y][old_pos.x];
+
 		board[new_pos.y][5] =
 			PieceFlags::Indicator{ board[new_pos.y][new_pos.x].color, PieceFlags::PieceType::ROOK };
 	}
+
+	ChangePiecePos(board, old_pos, new_pos);
 }
 
 
@@ -550,6 +567,7 @@ bool Board::CheckForMateStealMate() {
 		CheckKingAttacked(pieces_indicator, PieceFlags::PieceColor::WHITE) :
 		CheckKingAttacked(pieces_indicator, PieceFlags::PieceColor::BLACK);
 
+#ifdef PR_DEBUG
 	if (is_white_turn and is_king_attacked) {
 		std::cout << "BLACK WON - by checkmate" << '\n';
 	}
@@ -559,6 +577,7 @@ bool Board::CheckForMateStealMate() {
 	else if (!is_king_attacked) {
 		std::cout << "TIE - stealmate" << '\n';
 	}
+#endif
 
 	return true;
 }
@@ -672,14 +691,11 @@ void Board::UpdatePiecesSurface() {
 		for (uint8_t j = 0; j < BOARD_SIZE; j++) {
 			LocatePieceOnSurface(i, j);
 
-			if (show_console_board) {
-				std::cout << static_cast<int>(pieces_indicator[i][j].type) << ' ';
-			}
+			LOG(static_cast<int>(pieces_indicator[i][j].type));
+			LOG(' ');
 		}
 
-		if (show_console_board) {
-			std::cout << '\n';
-		}
+		LOG('\n');
 	}
 
 	// check king possibilities since the board is fully filled with occupers
@@ -689,22 +705,20 @@ void Board::UpdatePiecesSurface() {
 			GetActiveFields(pieces_indicator, white_king_pos);
 	}
 	else {
-		cache[white_king_pos.y][white_king_pos.x] =
+		cache[black_king_pos.y][black_king_pos.x] =
 			pieces_templates[static_cast<int>(PieceFlags::PieceColor::BLACK)][static_cast<int>(PieceFlags::PieceType::KING)]->
 			GetActiveFields(pieces_indicator, black_king_pos);
 	}
 
-	if (show_console_board) {
-		std::cout << std::string(15, '*') << '\n';
-	}
+	LOG(std::string(15, '*') + '\n');
 
 	if (CheckKingAttacked(pieces_indicator, PieceFlags::PieceColor::WHITE)) {
-		std::cout << "CHECK BLACK" << '\n';
+		LOG("CHECK BLACK\n")
 		turn_sound = sounds.check;
 
 	}
 	else if (CheckKingAttacked(pieces_indicator, PieceFlags::PieceColor::BLACK)) {
-		std::cout << "CHECK WHITE" << '\n';
+		LOG("CHECK WHITE\n")
 		turn_sound = sounds.check;
 	}
 

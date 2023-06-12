@@ -69,6 +69,7 @@ const int8_t& Pawn::GetDirection() noexcept {
 void Pawn::AvaibleMoves(
 	const PieceFlags::board_grid_t& pieces_indicator,
 	const bool& first_move_flag, sf::Vector2i& temp_vec, sf::Vector2i pos) noexcept {
+
 	if (!CheckFieldFreeValid(pieces_indicator, temp_vec)) {
 		return;
 	}
@@ -88,6 +89,7 @@ void Pawn::AvaibleMoves(
 void Pawn::AvaibleCaptures(
 	const PieceFlags::board_grid_t& pieces_indicator,
 	sf::Vector2i& temp_vec, sf::Vector2i pos) noexcept {
+
 	if (CheckCaptureField(pieces_indicator, temp_vec) and 
 		(!is_check or CheckCheckSafe(pieces_indicator, pos, temp_vec))) {
 		avaible_fields.push_back(temp_vec);
