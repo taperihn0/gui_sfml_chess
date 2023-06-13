@@ -19,7 +19,7 @@ Board::Board(const uint16_t& window_size)
 	curr_focused_pos(-1, -1),
 	black_king_pos(4, 0),
 	white_king_pos(4, BOARD_SIZE - 1),
-	grid_colors{ light_field, dark_field },
+	grid_colors{ dark_field, light_field },
 	is_pawn_upgrade_window(false),
 	upgrading_color(PieceFlags::PieceColor::EMPTY),
 	upgrading_x_pos(UINT8_MAX),
@@ -53,7 +53,7 @@ void Board::PrepareBoard() {
 	// preparing plain board with fields
 	for (uint8_t i = 0; i < BOARD_SIZE; i++) {
 		for (uint8_t j = 0; j < BOARD_SIZE; j++) {
-			const sf::Vector2f real_window_pos(float(j * FIELD_SIZE), float(i * FIELD_SIZE));
+			const sf::Vector2f real_window_pos(static_cast<float>(j * FIELD_SIZE), static_cast<float>(i * FIELD_SIZE));
 
 			// setting window position for every field
 			// and arranging even-odd fields 
@@ -131,6 +131,8 @@ void Board::ProcessPressedMouse(const sf::Vector2i& mouse_pos) {
 	if (!is_focus_flag and picked_piece.type != PieceFlags::PieceType::EMPTY and
 		is_turn_color) {
 		FocusPieceField(picked_piece, field_pos);
+		LOG(int(picked_piece.move_count));
+		LOG('\n');
 	}
 	else if (is_focus_flag and field_pos == curr_focused_pos) {
 		UnfocusPieceField(curr_focused_pos);
@@ -419,9 +421,8 @@ void Board::MovePiece(const sf::Vector2i old_pos, sf::Vector2i new_pos) {
 	}
 	
 	moved_piece = pieces_indicator[new_pos.y][new_pos.x];
-
 	SetEnPassantPos(sf::Vector2i(-1, -1));
-	//en_passant_pos = sf::Vector2i(-1, -1);
+
 	if (moved_piece.type == PieceFlags::PieceType::PAWN) {
 		const auto d(
 			dynamic_cast<Pawn*>(pieces_templates[static_cast<int>(moved_piece.color)][static_cast<int>(moved_piece.type)].get())->
@@ -484,7 +485,7 @@ void Board::ChangePiecePos(
 	board[old_pos.y][old_pos.x] =
 		PieceFlags::Indicator{ PieceFlags::PieceColor::EMPTY, PieceFlags::PieceType::EMPTY, 0 };
 
-	pieces_indicator[new_pos.y][new_pos.x].move_count++;
+	board[new_pos.y][new_pos.x].move_count++;
 }
 
 
