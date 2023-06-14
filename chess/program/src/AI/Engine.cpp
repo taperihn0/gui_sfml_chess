@@ -164,12 +164,12 @@ int16_t AI::Engine::Eval(PieceFlags::board_grid_t& board) {
 	for (uint8_t i = 0; i < BOARD_SIZE; i++) {
 		for (uint8_t j = 0; j < BOARD_SIZE; j++) {
 			if (board[i][j].color == PieceFlags::PieceColor::WHITE) {
-				eval += 20 * weights[static_cast<int>(board[i][j].type)];
-				eval += square_table[static_cast<int>(board[i][j].type)][i][j];
+				eval += 20 * weights[static_cast<uint8_t>(board[i][j].type)];
+				eval += square_table[static_cast<uint8_t>(board[i][j].type)][i][j];
 			}
 			else {
-				eval -= 20 * weights[static_cast<int>(board[i][j].type)];
-				eval -= square_table[static_cast<int>(board[i][j].type)][i][j];
+				eval -= 20 * weights[static_cast<uint8_t>(board[i][j].type)];
+				eval -= square_table[static_cast<uint8_t>(board[i][j].type)][i][j];
 			}
 		}
 	}
@@ -192,7 +192,7 @@ void AI::Engine::GenerateLegalMoves(std::vector<piece_pos_change>& legal_moves, 
 			}
 
 			auto l_moves(
-				(*pieces_templates)[static_cast<int>(piece.color)][static_cast<int>(piece.type)]->
+				(*pieces_templates)[static_cast<uint8_t>(piece.color)][static_cast<uint8_t>(piece.type)]->
 				GetActiveFields(board, sf::Vector2i(j, i)));
 
 			for (const auto& move : l_moves) {

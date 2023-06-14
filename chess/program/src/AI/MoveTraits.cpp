@@ -27,7 +27,7 @@ void AI::MoveTraits::MovePiece(
 		const auto moved_piece(board[new_pos.y][new_pos.x]);
 
 		const auto d(
-			dynamic_cast<Pawn*>((*pieces_templates)[static_cast<int>(moved_piece.color)][static_cast<int>(moved_piece.type)].get())->
+			dynamic_cast<Pawn*>((*pieces_templates)[static_cast<uint8_t>(moved_piece.color)][static_cast<uint8_t>(moved_piece.type)].get())->
 			GetDirection());
 		
 		if (new_pos.y - d == en_passant_pos.y) {

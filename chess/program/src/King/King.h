@@ -22,7 +22,7 @@ private:
 	// check whether new field is safe for king
 	bool CheckFieldCheckSafeValid(
 		const PieceFlags::board_grid_t& pieces_indicator,
-		sf::Vector2i old_pos, sf::Vector2i new_pos) noexcept;
+		sf::Vector2i old_pos, sf::Vector2i new_pos);
 
 	// check castling scenario
 	// conditions: 

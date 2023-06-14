@@ -16,7 +16,6 @@ const std::vector<sf::Vector2i>& Knight::GetActiveFields(
 	}
 
 	is_check = consider_check;
-
 	directions = { 1, 2 };
 
 	// generate 4 possible moves twice

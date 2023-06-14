@@ -96,11 +96,6 @@ private:
 	// and generate its occupied fields
 	void LocatePieceOnSurface(const uint8_t& y, const uint8_t& x);
 
-	// generating all the possible moves by player who just got a turn
-	// and storing it in cache memory
-	// if the player has no possible moves left, game is over
-	/*uint16_t PreGenerateAllMoves();*/
-
 	// focus after clicking on a piece
 	void FocusPieceField(const PieceFlags::Indicator& picked_piece, const sf::Vector2i& field_pos);
 
@@ -146,6 +141,9 @@ private:
 	// reset current en passant position
 	void SetEnPassantPos(const sf::Vector2i new_pos) noexcept;
 
+	// reset current focused pos
+	void SetFocusedPos(const sf::Vector2i new_pos) noexcept;
+
 	// while any piece is moving or simply capturing
 	void SetMoveSound(sf::Vector2i new_pos) noexcept;
 
@@ -158,11 +156,13 @@ private:
 		sf::Vector2i active_clicked;
 	};
 
-	sf::RenderTexture render_board;
-	sf::RenderTexture plain_board;
-	sf::RenderTexture pieces_surface;
+	sf::RenderTexture 
+		render_board,
+		plain_board,
+		pieces_surface;
 
-	const sf::Color light_field,
+	const sf::Color 
+		light_field,
 		dark_field,
 		highlighted_field,
 		upgrade_window_color;
@@ -175,7 +175,8 @@ private:
 	PieceFlags::templates_t pieces_templates;
 	PieceFlags::board_grid_t pieces_indicator;
 
-	sf::Vector2i en_passant_pos,
+	sf::Vector2i 
+		en_passant_pos,
 		curr_focused_pos,
 		black_king_pos, white_king_pos;
 	std::vector<sf::Vector2i> active_focused_field;
@@ -192,7 +193,8 @@ private:
 	uint16_t possible_moves;
 
 	struct Audio {
-		sf::Sound move,
+		sf::Sound 
+			move,
 			capture,
 			castle,
 			game_end,

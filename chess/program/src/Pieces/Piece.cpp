@@ -50,14 +50,22 @@ bool Piece::CheckCheckSafe(
 
 	for (uint8_t i = 0; i < BOARD_SIZE; i++) {
 		for (uint8_t j = 0; j < BOARD_SIZE; j++) {
-			if (pieces_indicator_cpy[i][j].type != PieceFlags::PieceType::EMPTY and
-				pieces_indicator_cpy[i][j].color != piece_color) {
-				board->SetPieceOccupiedFields(pieces_indicator_cpy, i, j, false);
+			if (pieces_indicator_cpy[i][j].type == PieceFlags::PieceType::EMPTY or
+				pieces_indicator_cpy[i][j].color == piece_color) {
+				continue;
+			}
+
+			board->SetPieceOccupiedFields(pieces_indicator_cpy, i, j, false);
+
+			// if the king is already attacked, there is no sense to continue
+			// generating new occupied fields - king is attacked anyway and it won't change
+			if (board->CheckKingAttacked(pieces_indicator_cpy, piece_color)) {
+				return false;
 			}
 		}
 	}
 
-	return !board->CheckKingAttacked(pieces_indicator_cpy, piece_color);
+	return true;
 }
 
 

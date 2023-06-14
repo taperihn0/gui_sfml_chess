@@ -49,17 +49,17 @@ void King::MarkOccupiedFields(
 
 bool King::CheckFieldCheckSafeValid(
 	const PieceFlags::board_grid_t& pieces_indicator,
-	sf::Vector2i old_pos, sf::Vector2i new_pos) noexcept {
+	sf::Vector2i old_pos, sf::Vector2i new_pos) {
 
 	// check if field is valid and can be captured
-	bool is_valid = Board::isValidField(new_pos) and
+	bool is_valid = 
+		Board::isValidField(new_pos) and
 		(pieces_indicator[new_pos.y][new_pos.x].type == PieceFlags::PieceType::EMPTY or
 			pieces_indicator[new_pos.y][new_pos.x].color != piece_color);
 
 	if (!is_valid) {
 		return false;
-	}
-	else if (!is_check) {
+	} else 	if (!is_check) {
 		return true;
 	}
 
@@ -67,25 +67,30 @@ bool King::CheckFieldCheckSafeValid(
 	PieceFlags::board_grid_t pieces_indicator_cpy = pieces_indicator;
 
 	board->ZeroEntireBoardOccuperColor(pieces_indicator_cpy);
-
 	board->ChangePiecePos(pieces_indicator_cpy, old_pos, new_pos);
 
 	for (uint8_t i = 0; i < BOARD_SIZE; i++) {
 		for (uint8_t j = 0; j < BOARD_SIZE; j++) {
-			if (pieces_indicator_cpy[i][j].type != PieceFlags::PieceType::EMPTY and
-				pieces_indicator_cpy[i][j].color != piece_color) {
-				board->SetPieceOccupiedFields(pieces_indicator_cpy, i, j, false);
+			if (pieces_indicator_cpy[i][j].type == PieceFlags::PieceType::EMPTY or
+				pieces_indicator_cpy[i][j].color == piece_color) {
+				continue;
+			}
+
+			board->SetPieceOccupiedFields(pieces_indicator_cpy, i, j, false);
+
+			// similar to the CheckCheckSafe method
+			if (piece_color == PieceFlags::PieceColor::WHITE and
+				pieces_indicator_cpy[new_pos.y][new_pos.x].occuping_color.black) {
+				return false;
+			}
+			else if (piece_color == PieceFlags::PieceColor::BLACK and
+				pieces_indicator_cpy[new_pos.y][new_pos.x].occuping_color.white) {
+				return false;
 			}
 		}
 	}
 
-	// decide if the king is safe
-	const auto new_field(pieces_indicator_cpy[new_pos.y][new_pos.x]);
-
-	if (piece_color == PieceFlags::PieceColor::WHITE) {
-		return !new_field.occuping_color.black;
-	}
-	return !new_field.occuping_color.white;
+	return true;
 }
 
 
