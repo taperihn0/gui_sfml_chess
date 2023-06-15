@@ -54,9 +54,6 @@
     <ClCompile Include="program\src\AI\MoveTraits.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="program\src\Pieces\Source.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="program\src\Board\Board.h">

@@ -30,13 +30,30 @@ namespace AI {
 		void UnMovePiece(
 			PieceFlags::board_grid_t& board, const sf::Vector2i new_pos);
 
-		void SetEnPassantPos(sf::Vector2i brd_en_passant_pos) noexcept;
+		void SetActualEnPassant(const sf::Vector2i new_en_passant) noexcept;
+
+		void SetKingsPos(const sf::Vector2i white_king, const sf::Vector2i black_king);
+
+		bool CheckPromote() noexcept;
+
+		bool CheckKingAttacked(PieceFlags::board_grid_t& board, const PieceFlags::PieceColor king_col);
 	private:
+		void UpdateBoard(PieceFlags::board_grid_t& board);
+
 		Board* const brdclass_ptr;
 		PieceFlags::templates_t* pieces_templates;
-		sf::Vector2i en_passant_pos;
+
+		sf::Vector2i
+			en_passant_pos,
+			white_king_pos,
+			black_king_pos;
 
 		PieceFlags::board_grid_t old_board;
-		std::stack<sf::Vector2i> prev_en_passant;
+		std::stack<sf::Vector2i>
+			prev_en_passant,
+			prev_white_king,
+			prev_black_king;
+
+		bool promote_flag;
 	};
 }

@@ -69,6 +69,11 @@ public:
 	sf::Vector2i EnPassantCase(
 		PieceFlags::board_grid_t& board, const sf::Vector2i new_pos, const PieceFlags::Indicator moved_piece, const int8_t d);
 
+	// check if king moved and update its position
+	void CheckUpdateIfKingMove(
+		const PieceFlags::board_grid_t& board, const sf::Vector2i new_pos,
+		sf::Vector2i& white_king, sf::Vector2i& black_king);
+
 	// check whether given coordinates are valid for my board
 	static bool isValidField(const sf::Vector2i& coords) noexcept;
 
@@ -104,7 +109,7 @@ private:
 
 	// move given piece to a given new field - 
 	// occupy empty field or capture enemy piece there
-	void MovePiece(const sf::Vector2i old_pos, sf::Vector2i new_pos);
+	void MovePiece(const sf::Vector2i old_pos, sf::Vector2i new_pos, const bool bot_turn = false);
 
 	// check whether my focus flag is set
 	bool isValidFocused() noexcept;
@@ -115,9 +120,6 @@ private:
 
 	// check whether given color is the same as current color of moving player
 	bool CheckCurrTurnColor(const PieceFlags::PieceColor& color) noexcept;
-
-	// check if king moved and update its position
-	void CheckUpdateIfKingMove(sf::Vector2i new_pos);
 
 	// draw window with pieces when pawn is upgrading
 	void OpenPawnUpgradeWindow(const sf::Vector2i& pos);

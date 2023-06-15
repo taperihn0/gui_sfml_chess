@@ -1,8 +1,8 @@
 #include "King.h"
 #include "..\Board\Board.h"
-#include "..\Pieces\Piece.cpp"
 
-/*template<typename T>
+// manual definition of base class member template due to linking errors
+template<typename T>
 bool Piece::LoopGenerateOccupied(PieceFlags::board_grid_t&& board, T&& break_condtn) {
 	for (uint8_t i = 0; i < BOARD_SIZE; i++) {
 		for (uint8_t j = 0; j < BOARD_SIZE; j++) {
@@ -20,7 +20,7 @@ bool Piece::LoopGenerateOccupied(PieceFlags::board_grid_t&& board, T&& break_con
 	}
 
 	return true;
-}*/
+}
 
 
 King::King(const std::string& texture_path, Board* board_ptr,
@@ -30,7 +30,8 @@ King::King(const std::string& texture_path, Board* board_ptr,
 {}
 
 
-const std::vector<sf::Vector2i>& King::GetActiveFields(
+const std::vector<sf::Vector2i>& 
+King::GetActiveFields(
 	const PieceFlags::board_grid_t& pieces_indicator,
 	const sf::Vector2i& pos, bool consider_check, bool clear) {
 	if (clear) {
@@ -92,7 +93,7 @@ bool King::CheckFieldCheckSafeValid(
 	brdclass_ptr->ChangePiecePos(pieces_indicator_cpy, old_pos, new_pos);
 
 	return LoopGenerateOccupied(std::move(pieces_indicator_cpy), [this, new_pos](const PieceFlags::board_grid_t& board) {
-		if (piece_color == PieceFlags::PieceColor::WHITE and  board[new_pos.y][new_pos.x].occuping_color.black) {
+		if (piece_color == PieceFlags::PieceColor::WHITE and board[new_pos.y][new_pos.x].occuping_color.black) {
 			return true;
 		}
 		else if (piece_color == PieceFlags::PieceColor::BLACK and board[new_pos.y][new_pos.x].occuping_color.white) {
@@ -112,8 +113,8 @@ void King::CheckAppendCastleMove(
 	}
 
 	// check one side
-	auto rook_field(pieces_indicator[pos.y][0]);
-	bool castle_flag(true);
+	auto rook_field = pieces_indicator[pos.y][0];
+	bool castle_flag = true;
 
 	if (rook_field.type == PieceFlags::PieceType::ROOK and
 		rook_field.color == piece_color and rook_field.CheckMove(0)) {
@@ -149,9 +150,7 @@ void King::CheckAppendCastleMove(
 }
 
 
-inline bool King::CheckFieldOccuped(PieceFlags::Indicator field) {
-	if (piece_color == PieceFlags::PieceColor::WHITE) {
-		return field.occuping_color.black;
-	}
-	return field.occuping_color.white;
+bool King::CheckFieldOccuped(PieceFlags::Indicator field) {
+	return piece_color == PieceFlags::PieceColor::WHITE ?
+		field.occuping_color.black : field.occuping_color.white;
 }

@@ -36,10 +36,6 @@ bool Piece::CheckFieldFreeValid(
 		pieces_indicator[pos.y][pos.x].type == PieceFlags::PieceType::EMPTY;
 }
 
-bool f(const PieceFlags::board_grid_t& board) {
-	return true;
-}
-
 bool Piece::CheckCheckSafe(
 	PieceFlags::board_grid_t pieces_indicator_cpy,
 	sf::Vector2i old_pos, sf::Vector2i new_pos) {
@@ -63,7 +59,10 @@ bool Piece::CheckCheckSafe(
 void Piece::MarkOccupiedFields(
 	PieceFlags::board_grid_t& board,
 	const sf::Vector2i& pos, bool consider_check) {
-	const auto active_fields(GetActiveFields(board, pos, consider_check));
+
+	// occupied fields are just active fields of some of the pieces
+	// for most of the time
+	auto&& active_fields = GetActiveFields(board, pos, consider_check);
 
 	for (const auto& occupied_field : active_fields) {
 		MarkSingleOccupied(board[occupied_field.y][occupied_field.x]);

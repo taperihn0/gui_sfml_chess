@@ -18,7 +18,10 @@ namespace AI {
 
 		piece_pos_change
 		GenerateBestMove(
-			const PieceFlags::av_moves_board_t& m_board, uint8_t depth, bool is_white_turn, sf::Vector2i en_passant_pos);
+			const PieceFlags::av_moves_board_t& m_board, uint8_t depth, bool is_white_turn, 
+			const sf::Vector2i en_passant_pos, const sf::Vector2i white_king_pos, const sf::Vector2i black_king_pos);
+
+		bool GetPromotePiece() noexcept;
 	private:
 		void InitSquareTables();
 
@@ -39,6 +42,7 @@ namespace AI {
 		std::array<square_table_t, 7> square_table;
 
 		MoveTraits move_hlp;
+		bool is_queen_promote;
 	};
 }
 

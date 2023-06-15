@@ -139,10 +139,8 @@ void Board::ProcessPressedMouse(const sf::Vector2i& mouse_pos) {
 		UnfocusPieceField(curr_focused_pos);
 
 		// bot's response
-		//const auto bot_move(engine.GenerateBestMove(cache, 1, false, en_passant_pos));
-
-		//MovePiece(bot_move.old_pos, bot_move.new_pos);
-		//is_white_turn = true;
+		const auto bot_move(engine.GenerateBestMove(cache, 1, false, en_passant_pos, white_king_pos, black_king_pos));
+		MovePiece(bot_move.old_pos, bot_move.new_pos);
 	}
 }
 
@@ -379,7 +377,7 @@ void Board::UnfocusPieceField(const sf::Vector2i& field_pos) {
 }
 
 
-void Board::MovePiece(const sf::Vector2i old_pos, sf::Vector2i new_pos) {
+void Board::MovePiece(const sf::Vector2i old_pos, sf::Vector2i new_pos, const bool bot_turn) {
 	auto
 		moved_piece(pieces_indicator[old_pos.y][old_pos.x]),
 		old_piece(pieces_indicator[new_pos.y][new_pos.x]);
@@ -395,12 +393,12 @@ void Board::MovePiece(const sf::Vector2i old_pos, sf::Vector2i new_pos) {
 		ChangePiecePos(pieces_indicator, old_pos, new_pos);
 	}
 	
-	CheckUpdateIfKingMove(new_pos);
+	CheckUpdateIfKingMove(pieces_indicator, new_pos, white_king_pos, black_king_pos);
 	ChangePlayersTurn();
 
 	moved_piece = pieces_indicator[new_pos.y][new_pos.x];
 	
-	// moving heavy piece resets current en passant pos
+	// moving a heavy piece resets current en passant pos
 	if (moved_piece.type != PieceFlags::PieceType::PAWN) {
 		SetEnPassantPos(sf::Vector2i(-1, -1));
 	}
@@ -417,9 +415,18 @@ void Board::MovePiece(const sf::Vector2i old_pos, sf::Vector2i new_pos) {
 		// check whether its new field is in the last row -
 		// it means pawn can be upgraded
 
+		bool promote_check = pawn_t_ptr->CheckForUpgrade(pieces_indicator, new_pos);
+
+		if (promote_check and bot_turn) {
+			pieces_indicator[new_pos.y][new_pos.x] =
+				PieceFlags::Indicator{
+				static_cast<PieceFlags::PieceColor>(2 - !is_white_turn),
+				engine.GetPromotePiece() ? PieceFlags::PieceType::QUEEN : PieceFlags::PieceType::KNIGHT };
+		}
+
 		UpdatePiecesSurface();
 
-		if (pawn_t_ptr->CheckForUpgrade(pieces_indicator, new_pos)) {
+		if (promote_check and !bot_turn) {
 			OpenPawnUpgradeWindow(new_pos);
 		}
 
@@ -467,7 +474,7 @@ sf::Vector2i Board::EnPassantCase(
 
 	// capturing pawn using en passant
 	if (new_pos.y - d == en_passant_pos.y) {
-		pieces_indicator[new_pos.y - d][new_pos.x] =
+		board[new_pos.y - d][new_pos.x] =
 			PieceFlags::Indicator{ PieceFlags::PieceColor::EMPTY, PieceFlags::PieceType::EMPTY };
 	}
 
@@ -477,6 +484,23 @@ sf::Vector2i Board::EnPassantCase(
 		(moved_piece.color == PieceFlags::PieceColor::BLACK and new_pos.y == 3));
 
 	return (is_double_field_move and moved_piece.CheckMove(1)) ? new_pos : sf::Vector2i{ -1, -1 };
+}
+
+
+void Board::CheckUpdateIfKingMove(
+	const PieceFlags::board_grid_t& board, const sf::Vector2i new_pos,
+	sf::Vector2i& white_king, sf::Vector2i& black_king) {
+	const auto moved_piece(board[new_pos.y][new_pos.x]);
+
+	if (moved_piece.type != PieceFlags::PieceType::KING) {
+		return;
+	}
+	else if (moved_piece.color == PieceFlags::PieceColor::WHITE) {
+		white_king = new_pos;
+	}
+	else {
+		black_king = new_pos;
+	}
 }
 
 
@@ -517,12 +541,9 @@ bool Board::isValidField(const sf::Vector2i& coords) noexcept {
 bool Board::CheckKingAttacked(
 	const PieceFlags::board_grid_t& board,
 	PieceFlags::PieceColor king_color) noexcept {
-	if (king_color == PieceFlags::PieceColor::WHITE) {
-		return board[static_cast<uint8_t>(white_king_pos.y)][static_cast<uint8_t>(white_king_pos.x)]
-			.occuping_color.black;
-	}
-	return board[static_cast<uint8_t>(black_king_pos.y)][static_cast<uint8_t>(black_king_pos.x)]
-		.occuping_color.white;
+	return king_color == PieceFlags::PieceColor::WHITE? 
+		board[white_king_pos.y][white_king_pos.x].occuping_color.black :
+		board[black_king_pos.y][black_king_pos.x].occuping_color.white;
 }
 
 
@@ -562,30 +583,14 @@ Board::FieldDataFlag
 Board::CheckAndGetIfFocused(const sf::Vector2i& coords) {
 	auto found = std::find(active_focused_field.cbegin(), active_focused_field.cend(), coords);
 
-	if (found != active_focused_field.cend()) {
-		return { true, *found };
-	}
-	return { false, sf::Vector2i() };
+	return found != active_focused_field.cend() ? 
+		FieldDataFlag{ true, *found } : FieldDataFlag{ false, sf::Vector2i() };
 }
 
 
 bool Board::CheckCurrTurnColor(const PieceFlags::PieceColor& color) noexcept {
-	return color == static_cast<PieceFlags::PieceColor>(static_cast<uint8_t>(PieceFlags::PieceColor::BLACK) - is_white_turn);
-}
-
-
-void Board::CheckUpdateIfKingMove(sf::Vector2i new_pos) {
-	const auto moved_piece(pieces_indicator[new_pos.y][new_pos.x]);
-
-	if (moved_piece.type != PieceFlags::PieceType::KING) {
-		return;
-	}
-	else if (moved_piece.color == PieceFlags::PieceColor::WHITE) {
-		white_king_pos = new_pos;
-	}
-	else {
-		black_king_pos = new_pos;
-	}
+	return color == 
+		static_cast<PieceFlags::PieceColor>(static_cast<uint8_t>(PieceFlags::PieceColor::BLACK) - is_white_turn);
 }
 
 

@@ -84,6 +84,7 @@ void Game::CheckEventsMain(const sf::Event& event) {
 	case sf::Event::KeyPressed: {
 		if (sf::Keyboard::Q) {
 			window.close();
+			run_status = false;
 		}
 		break;
 	}

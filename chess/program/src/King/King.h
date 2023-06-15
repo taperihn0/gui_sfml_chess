@@ -11,7 +11,8 @@ public:
 
 	// return active fields of king - all of the surrounding fields, except those 
 	// controlled by enemy
-	const std::vector<sf::Vector2i>& GetActiveFields(
+	const std::vector<sf::Vector2i>& 
+	GetActiveFields(
 		const PieceFlags::board_grid_t& pieces_indicator,
 		const sf::Vector2i& pos, bool consider_check = true, bool clear = true) override;
 

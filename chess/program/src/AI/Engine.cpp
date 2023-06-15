@@ -6,18 +6,24 @@ AI::Engine::Engine(PieceFlags::board_grid_t& board_ref, Board* brd_ptr, PieceFla
 	brdclass_ptr(brd_ptr),
 	pieces_templates(p_templates),
 	weights{ 0, 1, 3, 3, 5, 90 },
-	move_hlp(brd_ptr, p_templates) {
+	move_hlp(brd_ptr, p_templates),
+	is_queen_promote(false) {
 	InitSquareTables();
 }
 
 
 AI::piece_pos_change
 AI::Engine::GenerateBestMove(
-	const PieceFlags::av_moves_board_t& m_board, uint8_t depth, bool is_white_turn, sf::Vector2i en_passant_pos) {
-	auto turn_col(static_cast<PieceFlags::PieceColor>(2 - is_white_turn));
-	std::vector<piece_pos_change> legal_moves;
+	const PieceFlags::av_moves_board_t& m_board, uint8_t depth, bool is_white_turn, 
+	const sf::Vector2i en_passant_pos, const sf::Vector2i white_king_pos, const sf::Vector2i black_king_pos) {
 
-	move_hlp.SetEnPassantPos(en_passant_pos);
+	// setting color of the current player which got the turn and resetting promote flag
+	auto turn_col = static_cast<PieceFlags::PieceColor>(2 - is_white_turn);
+	std::vector<piece_pos_change> legal_moves;
+	is_queen_promote = false;
+
+	move_hlp.SetActualEnPassant(en_passant_pos);
+	move_hlp.SetKingsPos(white_king_pos, black_king_pos);
 
 	for (uint8_t i = 0; i < BOARD_SIZE; i++) {
 		for (uint8_t j = 0; j < BOARD_SIZE; j++) {
@@ -33,12 +39,28 @@ AI::Engine::GenerateBestMove(
 
 	int16_t best_pos_eval = is_white_turn ? INT16_MIN : INT16_MAX;
 	piece_pos_change final_move;
-	PieceFlags::board_grid_t board_cpy(rboard);
+	PieceFlags::board_grid_t board_cpy = rboard;
 
 	for (const auto& pos_change : legal_moves) {
 		move_hlp.MovePiece(board_cpy, pos_change.old_pos, pos_change.new_pos);
 		
-		auto move_eval(SearchEvalMove(board_cpy, depth - 1, is_white_turn));
+		if (move_hlp.CheckPromote()) {
+			board_cpy[pos_change.new_pos.y][pos_change.new_pos.x] =
+				PieceFlags::Indicator{ static_cast<PieceFlags::PieceColor>(2 - is_white_turn), PieceFlags::PieceType::QUEEN };
+
+			const auto move_eval = SearchEvalMove(board_cpy, depth - 1, is_white_turn);
+
+			if (CompEvals(best_pos_eval, move_eval, is_white_turn)) {
+				final_move = pos_change;
+				best_pos_eval = move_eval;
+				is_queen_promote = true;
+			}
+
+			board_cpy[pos_change.new_pos.y][pos_change.new_pos.x] =
+				PieceFlags::Indicator{ static_cast<PieceFlags::PieceColor>(2 - is_white_turn), PieceFlags::PieceType::KNIGHT };
+		}
+
+		const auto move_eval = SearchEvalMove(board_cpy, depth - 1, is_white_turn);
 
 		if (CompEvals(best_pos_eval, move_eval, is_white_turn)) {
 			final_move = pos_change;
@@ -52,6 +74,10 @@ AI::Engine::GenerateBestMove(
 	return final_move;
 }
 
+
+bool AI::Engine::GetPromotePiece() noexcept {
+	return is_queen_promote;
+}
 
 void AI::Engine::InitSquareTables() {
 	square_table[0] = {};

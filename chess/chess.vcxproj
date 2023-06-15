@@ -172,7 +172,6 @@
     <ClCompile Include="program\src\main.cpp" />
     <ClCompile Include="program\src\Rook\Rook.cpp" />
     <ClCompile Include="program\src\Queen\Queen.cpp" />
-    <ClCompile Include="program\src\Pieces\Source.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="program\src\AI\MoveTraits.h" />

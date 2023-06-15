@@ -5,7 +5,6 @@
 #include "..\Indicator.h"
 
 #include <vector>
-#include <functional>
 
 class Board;
 
