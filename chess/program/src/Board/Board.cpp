@@ -63,8 +63,7 @@ void Board::PrepareBoard() {
 
 			fields_coordinates[i][j] = real_window_pos;
 
-			// drawing default pieces distribution on the transparent
-			// pieces surface
+			// drawing default pieces distribution on the transparent pieces surface
 			LocatePieceOnSurface(i, j);
 		}
 	}
@@ -101,7 +100,10 @@ const sf::Vector2i& Board::GetEnPassantPos() noexcept {
 
 
 void Board::ProcessPressedMouse(const sf::Vector2i& mouse_pos) {
-	const sf::Vector2i field_pos((mouse_pos.x - 1) / FIELD_SIZE, (mouse_pos.y - 1) / FIELD_SIZE);
+	const sf::Vector2i field_pos(
+		(mouse_pos.x - 1) / FIELD_SIZE, 
+		(mouse_pos.y - 1) / FIELD_SIZE
+	);
 
 	// if whites' turn, then focus only white pieces
 	// else blacks' turn.
@@ -258,7 +260,7 @@ void Board::PreparePiecesTemplate() {
 
 
 void Board::PrepareAudio() {
-	auto load_sbuffer = [](auto sbuffer, const std::string& filepath) {
+	auto load_sbuffer = [](auto&& sbuffer, const std::string filepath) {
 		if (!sbuffer->loadFromFile(filepath)) {
 			exit(3);
 		}
@@ -373,7 +375,7 @@ void Board::UnfocusPieceField(const sf::Vector2i& field_pos) {
 	}
 
 	// reseting current focused piece flag
-	curr_focused_pos.y = -1, curr_focused_pos.x = -1;
+	SetFocusedPos(sf::Vector2i(-1, -1));
 }
 
 
@@ -664,18 +666,17 @@ void Board::UpdatePiecesSurface() {
 	}
 
 	// check king possibilities since the board is fully filled with occupers
-	auto& king_template = 
-		*pieces_templates[static_cast<uint8_t>(PieceFlags::PieceColor::WHITE)][static_cast<uint8_t>(PieceFlags::PieceType::KING)];
-
 	if (is_white_turn) {
 		cache[white_king_pos.y][white_king_pos.x] =
-			king_template.GetActiveFields(pieces_indicator, white_king_pos);
+			pieces_templates[static_cast<uint8_t>(PieceFlags::PieceColor::WHITE)][static_cast<uint8_t>(PieceFlags::PieceType::KING)]->
+			GetActiveFields(pieces_indicator, white_king_pos);
 
 		possible_moves += static_cast<uint16_t>(cache[white_king_pos.y][white_king_pos.x].size());
 	}
 	else {
 		cache[black_king_pos.y][black_king_pos.x] =
-			king_template.GetActiveFields(pieces_indicator, black_king_pos);
+			pieces_templates[static_cast<uint8_t>(PieceFlags::PieceColor::BLACK)][static_cast<uint8_t>(PieceFlags::PieceType::KING)]->
+			GetActiveFields(pieces_indicator, black_king_pos);
 
 		possible_moves += static_cast<uint16_t>(cache[black_king_pos.y][black_king_pos.x].size());
 	}

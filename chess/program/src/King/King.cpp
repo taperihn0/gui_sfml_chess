@@ -1,5 +1,27 @@
 #include "King.h"
 #include "..\Board\Board.h"
+#include "..\Pieces\Piece.cpp"
+
+/*template<typename T>
+bool Piece::LoopGenerateOccupied(PieceFlags::board_grid_t&& board, T&& break_condtn) {
+	for (uint8_t i = 0; i < BOARD_SIZE; i++) {
+		for (uint8_t j = 0; j < BOARD_SIZE; j++) {
+			if (board[i][j].type == PieceFlags::PieceType::EMPTY or
+				board[i][j].color == piece_color) {
+				continue;
+			}
+
+			brdclass_ptr->SetPieceOccupiedFields(board, i, j, false);
+
+			if (break_condtn(board)) {
+				return false;
+			}
+		}
+	}
+
+	return true;
+}*/
+
 
 King::King(const std::string& texture_path, Board* board_ptr,
 	const uint16_t& size, bool is_white_flag)
@@ -59,45 +81,32 @@ bool King::CheckFieldCheckSafeValid(
 
 	if (!is_valid) {
 		return false;
-	} else 	if (!is_check) {
+	} else if (!is_check) {
 		return true;
 	}
 
 	// prepare copy of current board and then generate all the occupied fields by enemy pieces
 	PieceFlags::board_grid_t pieces_indicator_cpy = pieces_indicator;
 
-	board->ZeroEntireBoardOccuperColor(pieces_indicator_cpy);
-	board->ChangePiecePos(pieces_indicator_cpy, old_pos, new_pos);
+	brdclass_ptr->ZeroEntireBoardOccuperColor(pieces_indicator_cpy);
+	brdclass_ptr->ChangePiecePos(pieces_indicator_cpy, old_pos, new_pos);
 
-	for (uint8_t i = 0; i < BOARD_SIZE; i++) {
-		for (uint8_t j = 0; j < BOARD_SIZE; j++) {
-			if (pieces_indicator_cpy[i][j].type == PieceFlags::PieceType::EMPTY or
-				pieces_indicator_cpy[i][j].color == piece_color) {
-				continue;
-			}
-
-			board->SetPieceOccupiedFields(pieces_indicator_cpy, i, j, false);
-
-			// similar to the CheckCheckSafe method
-			if (piece_color == PieceFlags::PieceColor::WHITE and
-				pieces_indicator_cpy[new_pos.y][new_pos.x].occuping_color.black) {
-				return false;
-			}
-			else if (piece_color == PieceFlags::PieceColor::BLACK and
-				pieces_indicator_cpy[new_pos.y][new_pos.x].occuping_color.white) {
-				return false;
-			}
+	return LoopGenerateOccupied(std::move(pieces_indicator_cpy), [this, new_pos](const PieceFlags::board_grid_t& board) {
+		if (piece_color == PieceFlags::PieceColor::WHITE and  board[new_pos.y][new_pos.x].occuping_color.black) {
+			return true;
 		}
-	}
-
-	return true;
+		else if (piece_color == PieceFlags::PieceColor::BLACK and board[new_pos.y][new_pos.x].occuping_color.white) {
+			return true;
+		}
+		return false;
+	});
 }
 
 
 void King::CheckAppendCastleMove(
 	const PieceFlags::board_grid_t& pieces_indicator,
 	sf::Vector2i pos) {
-	if (board->CheckKingAttacked(pieces_indicator, piece_color) or 
+	if (brdclass_ptr->CheckKingAttacked(pieces_indicator, piece_color) or
 		!pieces_indicator[pos.y][pos.x].CheckMove(0)) {
 		return;
 	}
@@ -140,7 +149,7 @@ void King::CheckAppendCastleMove(
 }
 
 
-bool King::CheckFieldOccuped(PieceFlags::Indicator field) {
+inline bool King::CheckFieldOccuped(PieceFlags::Indicator field) {
 	if (piece_color == PieceFlags::PieceColor::WHITE) {
 		return field.occuping_color.black;
 	}

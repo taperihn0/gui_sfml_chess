@@ -56,4 +56,3 @@ private:
 
 	const int8_t direction;
 };
-

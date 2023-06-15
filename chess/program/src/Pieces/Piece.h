@@ -5,6 +5,7 @@
 #include "..\Indicator.h"
 
 #include <vector>
+#include <functional>
 
 class Board;
 
@@ -14,8 +15,8 @@ public:
 		const uint16_t& size, const PieceFlags::PieceColor& piece_color_);
 
 	// just load necessery resources from hard drive 
-	void PreparePieceTexture(const uint16_t &size);
-	
+	void PreparePieceTexture(const uint16_t& size);
+
 	// draw piece's sprite on an transparent surface 
 	void DrawPiece(sf::Vector2f& window_pos);
 
@@ -49,12 +50,17 @@ public:
 	// set an occuper color of the given field
 	void MarkSingleOccupied(PieceFlags::Indicator& field) noexcept;
 
+	// looping through given grid, generating occupied fields
+	// and checking whether given condition is fulfilled
+	template<typename T>
+	bool LoopGenerateOccupied(PieceFlags::board_grid_t&& board, T&& break_condtn);
+
 	virtual ~Piece() = default;
 protected:
 	sf::Sprite piece_sprite;
 	std::vector<sf::Vector2i> avaible_fields;
-	
-	Board* const board;
+
+	Board* const brdclass_ptr;
 
 	const PieceFlags::PieceColor piece_color;
 
@@ -63,4 +69,3 @@ protected:
 
 	bool is_check;
 };
-

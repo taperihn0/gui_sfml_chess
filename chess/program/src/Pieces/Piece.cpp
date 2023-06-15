@@ -3,7 +3,7 @@
 
 Piece::Piece(const std::string& texture_path, Board* board_ptr,
 	const uint16_t& size, const PieceFlags::PieceColor& piece_color_)
-	: board(board_ptr), 
+	: brdclass_ptr(board_ptr),
 	piece_color(piece_color_), 
 	piece_texture_path(texture_path),
 	piece_texture_ptr(std::make_unique<sf::Texture>()) {
@@ -25,7 +25,7 @@ void Piece::PreparePieceTexture(const uint16_t& size) {
 
 
 void Piece::DrawPiece(sf::Vector2f& window_pos) {
-	board->DrawOnPiecesSurfaceField(piece_sprite, window_pos);
+	brdclass_ptr->DrawOnPiecesSurfaceField(piece_sprite, window_pos);
 }
 
 
@@ -36,36 +36,27 @@ bool Piece::CheckFieldFreeValid(
 		pieces_indicator[pos.y][pos.x].type == PieceFlags::PieceType::EMPTY;
 }
 
+bool f(const PieceFlags::board_grid_t& board) {
+	return true;
+}
 
 bool Piece::CheckCheckSafe(
 	PieceFlags::board_grid_t pieces_indicator_cpy,
 	sf::Vector2i old_pos, sf::Vector2i new_pos) {
 
-	board->ZeroEntireBoardOccuperColor(pieces_indicator_cpy);
+	brdclass_ptr->ZeroEntireBoardOccuperColor(pieces_indicator_cpy);
 
 	// simulation of piece's move - if the move won't cause check on king of 
 	// same color as a moving piece, then the move is unvalid
 	// Just moving piece on a copied board and checking if king is under attack
-	board->ChangePiecePos(pieces_indicator_cpy, old_pos, new_pos);
+	brdclass_ptr->ChangePiecePos(pieces_indicator_cpy, old_pos, new_pos);
 
-	for (uint8_t i = 0; i < BOARD_SIZE; i++) {
-		for (uint8_t j = 0; j < BOARD_SIZE; j++) {
-			if (pieces_indicator_cpy[i][j].type == PieceFlags::PieceType::EMPTY or
-				pieces_indicator_cpy[i][j].color == piece_color) {
-				continue;
-			}
+	// if the king is already attacked, there is no sense to continue
+	// generating new occupied fields - king is attacked anyway and it won't change
 
-			board->SetPieceOccupiedFields(pieces_indicator_cpy, i, j, false);
-
-			// if the king is already attacked, there is no sense to continue
-			// generating new occupied fields - king is attacked anyway and it won't change
-			if (board->CheckKingAttacked(pieces_indicator_cpy, piece_color)) {
-				return false;
-			}
-		}
-	}
-
-	return true;
+	return LoopGenerateOccupied(std::move(pieces_indicator_cpy), [this](const PieceFlags::board_grid_t& board) {
+		return brdclass_ptr->CheckKingAttacked(board, piece_color);
+	});
 }
 
 
@@ -96,4 +87,25 @@ void Piece::MarkSingleOccupied(PieceFlags::Indicator& field) noexcept {
 	else {
 		field.occuping_color.black = true;
 	}
+}
+
+
+template<typename T>
+bool Piece::LoopGenerateOccupied(PieceFlags::board_grid_t&& board, T&& break_condtn) {
+	for (uint8_t i = 0; i < BOARD_SIZE; i++) {
+		for (uint8_t j = 0; j < BOARD_SIZE; j++) {
+			if (board[i][j].type == PieceFlags::PieceType::EMPTY or
+				board[i][j].color == piece_color) {
+				continue;
+			}
+
+			brdclass_ptr->SetPieceOccupiedFields(board, i, j, false);
+
+			if (break_condtn(board)) {
+				return false;
+			}
+		}
+	}
+
+	return true;
 }

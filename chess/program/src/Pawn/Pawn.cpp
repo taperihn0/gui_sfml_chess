@@ -144,5 +144,5 @@ bool Pawn::CheckEnPassantPawn(
 		pieces_indicator[pos.y][pos.x].color != piece_color and
 		pieces_indicator[pos.y][pos.x].type == PieceFlags::PieceType::PAWN and
 		pieces_indicator[pos.y][pos.x].CheckMove(1) and
-		board->GetEnPassantPos() == pos;
+		brdclass_ptr->GetEnPassantPos() == pos;
 }
