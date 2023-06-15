@@ -1,5 +1,6 @@
 #include "Board.h"
 
+
 #ifdef PR_DEBUG
 #define CONSOLE_LOG(x, end) std::cout << x << end;
 #else
@@ -112,6 +113,11 @@ void Board::ProcessPressedMouse(const sf::Vector2i& mouse_pos) {
 
 	if (is_pawn_upgrade_window) {
 		PickPieceOnWindow(field_pos);
+
+		// bot's response
+		const auto bot_move(engine.GenerateBestMove(cache, 1, false, en_passant_pos, white_king_pos, black_king_pos));
+		MovePiece(bot_move.old_pos, bot_move.new_pos, true);
+
 		return;
 	}
 	else if (!isValidField(field_pos)) {
@@ -138,9 +144,19 @@ void Board::ProcessPressedMouse(const sf::Vector2i& mouse_pos) {
 		MovePiece(curr_focused_pos, move_field.active_clicked);
 		UnfocusPieceField(curr_focused_pos);
 
+		if (is_pawn_upgrade_window) {
+			return;
+		}
+
 		// bot's response
 		const auto bot_move(engine.GenerateBestMove(cache, 1, false, en_passant_pos, white_king_pos, black_king_pos));
-		MovePiece(bot_move.old_pos, bot_move.new_pos);
+		
+		if (bot_move.new_pos.x == -1) {
+			possible_moves = 0;
+			return;
+		}
+
+		MovePiece(bot_move.old_pos, bot_move.new_pos, true);
 	}
 }
 
@@ -449,7 +465,8 @@ void Board::ZeroEntireBoardOccuperColor(PieceFlags::board_grid_t& board) {
 
 void Board::SetPieceOccupiedFields(
 	PieceFlags::board_grid_t& board, const uint8_t& y, const uint8_t& x, bool consider_mate) {
-	pieces_templates[static_cast<uint8_t>(board[y][x].color)][static_cast<uint8_t>(board[y][x].type)]->MarkOccupiedFields(board, sf::Vector2i(x, y), consider_mate);
+	pieces_templates[static_cast<uint8_t>(board[y][x].color)][static_cast<uint8_t>(board[y][x].type)]->
+		MarkOccupiedFields(board, sf::Vector2i(x, y), consider_mate);
 }
 
 

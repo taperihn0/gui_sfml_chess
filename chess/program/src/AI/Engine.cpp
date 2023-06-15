@@ -1,6 +1,7 @@
 #include "Engine.h"
 #include "..\Board\Board.h"
 
+
 AI::Engine::Engine(PieceFlags::board_grid_t& board_ref, Board* brd_ptr, PieceFlags::templates_t* p_templates)
 	: rboard(board_ref),
 	brdclass_ptr(brd_ptr),
@@ -43,12 +44,12 @@ AI::Engine::GenerateBestMove(
 
 	for (const auto& pos_change : legal_moves) {
 		move_hlp.MovePiece(board_cpy, pos_change.old_pos, pos_change.new_pos);
-		
+
 		if (move_hlp.CheckPromote()) {
 			board_cpy[pos_change.new_pos.y][pos_change.new_pos.x] =
 				PieceFlags::Indicator{ static_cast<PieceFlags::PieceColor>(2 - is_white_turn), PieceFlags::PieceType::QUEEN };
 
-			const auto move_eval = SearchEvalMove(board_cpy, depth - 1, is_white_turn);
+			const auto move_eval = SearchEvalMove(board_cpy, depth - 1, !is_white_turn);
 
 			if (CompEvals(best_pos_eval, move_eval, is_white_turn)) {
 				final_move = pos_change;
@@ -60,7 +61,7 @@ AI::Engine::GenerateBestMove(
 				PieceFlags::Indicator{ static_cast<PieceFlags::PieceColor>(2 - is_white_turn), PieceFlags::PieceType::KNIGHT };
 		}
 
-		const auto move_eval = SearchEvalMove(board_cpy, depth - 1, is_white_turn);
+		const auto move_eval = SearchEvalMove(board_cpy, depth - 1, !is_white_turn);
 
 		if (CompEvals(best_pos_eval, move_eval, is_white_turn)) {
 			final_move = pos_change;
@@ -71,7 +72,8 @@ AI::Engine::GenerateBestMove(
 	}
 
 	// return chosen best move
-	return final_move;
+	return best_pos_eval == INT16_MAX or best_pos_eval == INT16_MIN ?
+	piece_pos_change{ sf::Vector2i(-1, -1), sf::Vector2i(-1, -1) } : final_move;
 }
 
 
@@ -170,16 +172,36 @@ int16_t AI::Engine::SearchEvalMove(PieceFlags::board_grid_t& board, uint8_t dept
 	for (const auto& pos_change : legal_moves) {
 		move_hlp.MovePiece(board, pos_change.old_pos, pos_change.new_pos);
 
+		if (move_hlp.CheckPromote()) {
+			board[pos_change.new_pos.y][pos_change.new_pos.x] =
+				PieceFlags::Indicator{ static_cast<PieceFlags::PieceColor>(2 - is_white_turn), PieceFlags::PieceType::QUEEN };
+
+			const auto move_eval = SearchEvalMove(board, depth - 1, !is_white_turn);
+
+			if (is_white_turn) {
+				eval = std::max(eval, move_eval);
+			}
+			else {
+				eval = std::min(eval, move_eval);
+			}
+
+			board[pos_change.new_pos.y][pos_change.new_pos.x] =
+				PieceFlags::Indicator{ static_cast<PieceFlags::PieceColor>(2 - is_white_turn), PieceFlags::PieceType::KNIGHT };
+		}
+
+		const auto move_eval = SearchEvalMove(board, depth - 1, !is_white_turn);
+
 		if (is_white_turn) {
-			eval = std::max(eval, SearchEvalMove(board, depth - 1, !is_white_turn));
+			eval = std::max(eval, move_eval);
 		}
 		else {
-			eval = std::min(eval, SearchEvalMove(board, depth - 1, !is_white_turn));
+			eval = std::min(eval, move_eval);
 		}
 	
 		move_hlp.UnMovePiece(board, pos_change.new_pos);
 	}
 
+	
 	return eval;
 }
 

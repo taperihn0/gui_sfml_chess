@@ -33,7 +33,7 @@ namespace AI {
 
 		void GenerateLegalMoves(std::vector<piece_pos_change>& legal_moves, PieceFlags::board_grid_t& board, bool is_white_turn);
 
-		PieceFlags::board_grid_t& rboard;
+		const PieceFlags::board_grid_t& rboard;
 		Board* const brdclass_ptr;
 
 		const PieceFlags::templates_t* const pieces_templates;
