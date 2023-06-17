@@ -36,6 +36,7 @@ bool Piece::CheckFieldFreeValid(
 		pieces_indicator[pos.y][pos.x].type == PieceFlags::PieceType::EMPTY;
 }
 
+
 bool Piece::CheckCheckSafe(
 	PieceFlags::board_grid_t pieces_indicator_cpy,
 	sf::Vector2i old_pos, sf::Vector2i new_pos) {
@@ -51,7 +52,7 @@ bool Piece::CheckCheckSafe(
 	// generating new occupied fields - king is attacked anyway and it won't change
 
 	return LoopGenerateOccupied(std::move(pieces_indicator_cpy), [this](const PieceFlags::board_grid_t& board) {
-		return brdclass_ptr->CheckKingAttacked(board, piece_color);
+		return brdclass_ptr->CheckKingAttacked(board, piece_color, brd_king_pos);
 	});
 }
 

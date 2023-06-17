@@ -13,13 +13,11 @@ AI::MoveTraits::MoveTraits(Board* brd_ptr, PieceFlags::templates_t* p_templates)
 void AI::MoveTraits::MovePiece(
 	PieceFlags::board_grid_t& board, const sf::Vector2i old_pos, sf::Vector2i new_pos) {
 
-	// remembering old board and then using this as an UnMove operation
-	old_board = board;
-	sf::Vector2i enpsnt_sngle_case;
-
+	// remembering old board state and then using it as an UnMove operation
 	prev_en_passant.push(en_passant_pos);
 	prev_white_king.push(white_king_pos);
 	prev_black_king.push(black_king_pos);
+	prev_brd_states.push(board);
 
 	promote_flag = false;
 	auto
@@ -41,7 +39,7 @@ void AI::MoveTraits::MovePiece(
 
 	// moving a heavy piece resets current en passant pos
 	if (moved_piece.type != PieceFlags::PieceType::PAWN) {
-		enpsnt_sngle_case = sf::Vector2i(-1, -1);
+		SetActualEnPassant(sf::Vector2i(-1, -1));
 	}
 	// Check if the moved piece was pawn - this case is a bit tricky
 	else if (moved_piece.type == PieceFlags::PieceType::PAWN) {
@@ -50,12 +48,12 @@ void AI::MoveTraits::MovePiece(
 
 		const auto d = pawn_t_ptr->GetDirection();
 
-		enpsnt_sngle_case = brdclass_ptr->EnPassantCase(board, new_pos, moved_piece, d);
+		SetActualEnPassant(brdclass_ptr->EnPassantCase(board, new_pos, moved_piece, d, en_passant_pos.y));
+
+		UpdateBoard(board);
 
 		// check whether its new field is in the last row -
 		// it means pawn can be upgraded
-
-		UpdateBoard(board);
 
 		if (pawn_t_ptr->CheckForUpgrade(board, new_pos)) {
 			promote_flag = true;
@@ -65,7 +63,6 @@ void AI::MoveTraits::MovePiece(
 	}
 
 	UpdateBoard(board);
-	SetActualEnPassant(enpsnt_sngle_case);
 }
 
 
@@ -83,7 +80,8 @@ void AI::MoveTraits::UnMovePiece(
 	prev_black_king.pop();
 
 	// last board state
-	board = old_board;
+	board = prev_brd_states.top();
+	prev_brd_states.pop();
 }
 
 
@@ -107,6 +105,16 @@ bool AI::MoveTraits::CheckKingAttacked(PieceFlags::board_grid_t& board, const Pi
 	return king_col == PieceFlags::PieceColor::WHITE ?
 		board[white_king_pos.y][white_king_pos.x].occuping_color.black :
 		board[black_king_pos.y][black_king_pos.x].occuping_color.white;
+}
+
+sf::Vector2i AI::MoveTraits::GetPrevEnPassant() {
+	return en_passant_pos;
+}
+
+
+sf::Vector2i AI::MoveTraits::GetKingPos(PieceFlags::PieceColor king_col) {
+	return king_col == PieceFlags::PieceColor::WHITE ?
+		white_king_pos : black_king_pos;
 }
 
 

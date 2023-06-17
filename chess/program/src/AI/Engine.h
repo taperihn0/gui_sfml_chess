@@ -6,6 +6,7 @@
 #include "MoveTraits.h"
 
 #include <vector>
+#include <chrono>
 
 class Board;
 
@@ -16,7 +17,7 @@ namespace AI {
 
 		Engine(PieceFlags::board_grid_t& board_ref, Board* brd_ptr, PieceFlags::templates_t* p_templates);
 
-		piece_pos_change
+		unsigned long long
 		GenerateBestMove(
 			const PieceFlags::av_moves_board_t& m_board, uint8_t depth, bool is_white_turn, 
 			const sf::Vector2i en_passant_pos, const sf::Vector2i white_king_pos, const sf::Vector2i black_king_pos);
@@ -27,7 +28,7 @@ namespace AI {
 
 		bool CompEvals(int16_t ev1, int16_t ev2, bool is_white_turn) noexcept;
 
-		int16_t SearchEvalMove(PieceFlags::board_grid_t& board, uint8_t depth, bool is_white_turn);
+		unsigned long long SearchEvalMove(PieceFlags::board_grid_t& board, uint8_t depth, bool is_white_turn);
 
 		int16_t Eval(PieceFlags::board_grid_t& board);
 

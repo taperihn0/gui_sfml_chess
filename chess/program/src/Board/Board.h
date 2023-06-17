@@ -18,6 +18,7 @@
 #include <cstdint>
 #include <vector>
 #include <algorithm>
+#include <cctype>
 
 class Board {
 public:
@@ -67,7 +68,8 @@ public:
 	// capturing and updating current pawn which can be captured using en passant technique
 	// return updated en passant pos
 	sf::Vector2i EnPassantCase(
-		PieceFlags::board_grid_t& board, const sf::Vector2i new_pos, const PieceFlags::Indicator moved_piece, const int8_t d);
+		PieceFlags::board_grid_t& board, const sf::Vector2i new_pos, 
+		const PieceFlags::Indicator moved_piece, const int8_t d, int8_t en_passant_y);
 
 	// check if king moved and update its position
 	void CheckUpdateIfKingMove(
@@ -80,14 +82,14 @@ public:
 	// is there a mate on a king of a given color?
 	bool CheckKingAttacked(
 		const PieceFlags::board_grid_t& board,
-		PieceFlags::PieceColor king_color) noexcept;
+		PieceFlags::PieceColor king_color, sf::Vector2i check_pos) noexcept;
 
 	// return true whether game is over
 	bool CheckForMateStealMate();
 private:
 	struct FieldDataFlag;
 
-	// fill fields with starting postitions of pieces
+	// fill fields with some FEN string
 	void InitBoardFields() noexcept;
 
 	// generate template for every single piece

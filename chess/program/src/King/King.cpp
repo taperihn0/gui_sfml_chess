@@ -92,7 +92,7 @@ bool King::CheckFieldCheckSafeValid(
 	brdclass_ptr->ZeroEntireBoardOccuperColor(pieces_indicator_cpy);
 	brdclass_ptr->ChangePiecePos(pieces_indicator_cpy, old_pos, new_pos);
 
-	return LoopGenerateOccupied(std::move(pieces_indicator_cpy), [this, new_pos](const PieceFlags::board_grid_t& board) {
+	/*return LoopGenerateOccupied(std::move(pieces_indicator_cpy), [this, new_pos](const PieceFlags::board_grid_t& board) {
 		if (piece_color == PieceFlags::PieceColor::WHITE and board[new_pos.y][new_pos.x].occuping_color.black) {
 			return true;
 		}
@@ -100,6 +100,10 @@ bool King::CheckFieldCheckSafeValid(
 			return true;
 		}
 		return false;
+	});*/
+
+	return LoopGenerateOccupied(std::move(pieces_indicator_cpy), [this, new_pos](const PieceFlags::board_grid_t& board) {
+		return brdclass_ptr->CheckKingAttacked(board, piece_color, new_pos);
 	});
 }
 
@@ -107,7 +111,8 @@ bool King::CheckFieldCheckSafeValid(
 void King::CheckAppendCastleMove(
 	const PieceFlags::board_grid_t& pieces_indicator,
 	sf::Vector2i pos) {
-	if (brdclass_ptr->CheckKingAttacked(pieces_indicator, piece_color) or
+
+	if (brdclass_ptr->CheckKingAttacked(pieces_indicator, piece_color, pos) or
 		!pieces_indicator[pos.y][pos.x].CheckMove(0)) {
 		return;
 	}

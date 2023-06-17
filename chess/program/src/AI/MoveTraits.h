@@ -37,6 +37,10 @@ namespace AI {
 		bool CheckPromote() noexcept;
 
 		bool CheckKingAttacked(PieceFlags::board_grid_t& board, const PieceFlags::PieceColor king_col);
+
+		sf::Vector2i GetPrevEnPassant();
+
+		sf::Vector2i GetKingPos(PieceFlags::PieceColor king_col);
 	private:
 		void UpdateBoard(PieceFlags::board_grid_t& board);
 
@@ -53,6 +57,8 @@ namespace AI {
 			prev_en_passant,
 			prev_white_king,
 			prev_black_king;
+
+		std::stack<PieceFlags::board_grid_t> prev_brd_states;
 
 		bool promote_flag;
 	};

@@ -55,6 +55,9 @@ public:
 	bool LoopGenerateOccupied(PieceFlags::board_grid_t&& board, T&& break_condtn);
 
 	virtual ~Piece() = default;
+
+	sf::Vector2i brd_ep;
+	sf::Vector2i brd_king_pos;
 protected:
 	sf::Sprite piece_sprite;
 	std::vector<sf::Vector2i> avaible_fields;

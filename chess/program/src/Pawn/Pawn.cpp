@@ -16,7 +16,6 @@ const std::vector<sf::Vector2i>& Pawn::GetActiveFields(
 	}
 
 	sf::Vector2i temp_vec;
-
 	is_check = consider_check;
 
 	// append avaible moves of a piece without capturing
@@ -144,5 +143,6 @@ bool Pawn::CheckEnPassantPawn(
 		pieces_indicator[pos.y][pos.x].color != piece_color and
 		pieces_indicator[pos.y][pos.x].type == PieceFlags::PieceType::PAWN and
 		pieces_indicator[pos.y][pos.x].CheckMove(1) and
-		brdclass_ptr->GetEnPassantPos() == pos;
+		//brdclass_ptr->GetEnPassantPos() == pos;
+		brd_ep == pos;
 }
