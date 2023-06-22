@@ -1,9 +1,8 @@
 #pragma once
 
-#include <SFML\Graphics.hpp>
 #include <SFML\Audio.hpp>
 
-#include "..\Indicator.h"
+#include "..\PieceData.h"
 #include "..\Pawn\Pawn.h"
 #include "..\Rook\Rook.h"
 #include "..\Bishop\Bishop.h"
@@ -34,55 +33,47 @@ public:
 	sf::Sprite GetBoardSprite();
 
 	// size in pixels of a single field on the board
-	const uint16_t& GetFieldSize() noexcept;
-
-	// size of a chess board
-	static constexpr uint8_t GetBoardSize() noexcept;
-
-	// return current field, which contain pawn
-	// which is possible to capture by en passant technique - 
-	// there is only one such pawn on the board
-	const sf::Vector2i& GetEnPassantPos() noexcept;
+	inline uint16_t GetFieldSize() noexcept;
 
 	// process every single click in the area of game window
 	void ProcessPressedMouse(const sf::Vector2i& mouse_pos);
 
 	// zero occuper color of field
-	void ZeroEntireBoardOccuperColor(PieceFlags::board_grid_t& board);
+	void ZeroEntireBoardOccuperColor(pt::board_grid_t& gboard);
 
-	// set all of the piece occupied fields
+	// set all of the occupied fields of piece of given pos in a gboard
 	void SetPieceOccupiedFields(
-		PieceFlags::board_grid_t& board, const uint8_t& y, const uint8_t& x, bool consider_mate = false);
+		pt::board_grid_t& gboard, const pt::PieceList& gpiece_list, uint8_t y, uint8_t x);
 
 	// simply move a piece and change his position in given 2d array
 	void ChangePiecePos(
-		PieceFlags::board_grid_t& board,
-		sf::Vector2i old_pos, sf::Vector2i new_pos) noexcept;
+		pt::board_grid_t& gboard,
+		const sf::Vector2i old_pos, const sf::Vector2i new_pos) noexcept;
 
 	// kind of ChangePiecePos() function, but for king and castling
 	void CastleKingChange(
-		PieceFlags::board_grid_t& board,
+		pt::board_grid_t& gboard,
 		sf::Vector2i old_pos, sf::Vector2i& new_pos);
 
 	// all the problems with en passant capture in one function -
 	// capturing and updating current pawn which can be captured using en passant technique
 	// return updated en passant pos
 	sf::Vector2i EnPassantCase(
-		PieceFlags::board_grid_t& board, const sf::Vector2i new_pos, 
-		const PieceFlags::Indicator moved_piece, const int8_t d, int8_t en_passant_y);
+		pt::board_grid_t& gboard, const sf::Vector2i new_pos, 
+		const int8_t d, const int8_t en_passant_y);
 
 	// check if king moved and update its position
 	void CheckUpdateIfKingMove(
-		const PieceFlags::board_grid_t& board, const sf::Vector2i new_pos,
+		const pt::board_grid_t& gboard, const sf::Vector2i new_pos,
 		sf::Vector2i& white_king, sf::Vector2i& black_king);
 
 	// check whether given coordinates are valid for my board
-	static bool isValidField(const sf::Vector2i& coords) noexcept;
+	static bool isValidField(sf::Vector2i pos) noexcept;
 
 	// is there a mate on a king of a given color?
-	bool CheckKingAttacked(
-		const PieceFlags::board_grid_t& board,
-		PieceFlags::PieceColor king_color, sf::Vector2i check_pos) noexcept;
+	inline bool CheckKingAttacked(
+		const pt::board_grid_t& gboard,
+		const pt::PieceColor king_color, const sf::Vector2i check_pos) noexcept;
 
 	// return true whether game is over
 	bool CheckForMateStealMate();
@@ -101,10 +92,10 @@ private:
 	// for every piece in 2d array
 	// locate it in a proper field in alpha surface
 	// and generate its occupied fields
-	void LocatePieceOnSurface(const uint8_t& y, const uint8_t& x);
+	void LocatePieceOnSurface(const uint8_t y, const uint8_t x);
 
 	// focus after clicking on a piece
-	void FocusPieceField(const PieceFlags::Indicator& picked_piece, const sf::Vector2i& field_pos);
+	void FocusPieceField(const pt::field_t& picked_piece, const sf::Vector2i& field_pos);
 
 	// unfocus after clicking exactly on a focused piece
 	void UnfocusPieceField(const sf::Vector2i& field_pos);
@@ -114,22 +105,22 @@ private:
 	void MovePiece(const sf::Vector2i old_pos, sf::Vector2i new_pos, const bool bot_turn = false);
 
 	// check whether my focus flag is set
-	bool isValidFocused() noexcept;
+	inline bool isValidFocused() noexcept;
 
 	// check whether field is in focus fields
 	FieldDataFlag
-		CheckAndGetIfFocused(const sf::Vector2i& coords);
+	CheckAndGetIfFocused(sf::Vector2i pos);
 
 	// check whether given color is the same as current color of moving player
-	bool CheckCurrTurnColor(const PieceFlags::PieceColor& color) noexcept;
+	inline bool CheckCurrTurnColor(pt::PieceColor color) noexcept;
 
 	// draw window with pieces when pawn is upgrading
-	void OpenPawnUpgradeWindow(const sf::Vector2i& pos);
+	void OpenPawnUpgradeWindow(sf::Vector2i pos);
 
 	// process mouse click - 
 	// if it's not valid, just wait for 
 	// proper click pos and leave window turned on
-	void PickPieceOnWindow(const sf::Vector2i& pos);
+	void PickPieceOnWindow(sf::Vector2i pos);
 
 	// updating render_board sprite
 	void UpdateBoard();
@@ -140,18 +131,21 @@ private:
 
 	// change is_white_turn variable to indicate 
 	// whose is turn now
-	void ChangePlayersTurn() noexcept;
+	inline void ChangePlayersTurn() noexcept;
 
 	// reset current en passant position
-	void SetEnPassantPos(const sf::Vector2i new_pos) noexcept;
+	// it's a position of a pawn
+	// which is possible to capture using en passant technique - 
+	// there is only one such pawn on the board
+	inline void SetEnPassantPos(const sf::Vector2i new_pos) noexcept;
 
 	// reset current focused pos
-	void SetFocusedPos(const sf::Vector2i new_pos) noexcept;
+	inline void SetFocusedPos(const sf::Vector2i new_pos) noexcept;
 
 	// while any piece is moving or simply capturing
 	void SetMoveSound(sf::Vector2i new_pos) noexcept;
 
-	void SetCastleSound() noexcept;
+	inline void SetCastleSound() noexcept;
 
 	void SetEnPassantSound(sf::Vector2i pos) noexcept;
 
@@ -176,8 +170,9 @@ private:
 	const uint16_t WINDOW_SIZE, FIELD_SIZE;
 
 	std::array<std::array<sf::Vector2f, BOARD_SIZE>, BOARD_SIZE> fields_coordinates;
-	PieceFlags::templates_t pieces_templates;
-	PieceFlags::board_grid_t pieces_indicator;
+	pt::templates_t pieces_templates;
+	pt::board_grid_t board;
+	pt::PieceList piece_list;
 
 	sf::Vector2i 
 		en_passant_pos,
@@ -185,15 +180,15 @@ private:
 		black_king_pos, white_king_pos;
 	std::vector<sf::Vector2i> active_focused_field;
 
-	std::array<PieceFlags::PieceType, 4> list_of_window_pieces;
+	std::array<pt::PieceType, 4> list_of_window_pieces;
 
 	bool is_pawn_upgrade_window;
-	PieceFlags::PieceColor upgrading_color;
+	pt::PieceColor upgrading_color;
 	uint8_t upgrading_x_pos;
 
 	bool is_white_turn;
 
-	PieceFlags::av_moves_board_t cache;
+	pt::av_moves_board_t cache;
 	uint16_t possible_moves;
 
 	struct Audio {

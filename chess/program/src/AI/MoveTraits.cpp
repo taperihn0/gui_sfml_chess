@@ -2,7 +2,7 @@
 #include "..\Board\Board.h"
 #include "..\Pawn\Pawn.h"
 
-AI::MoveTraits::MoveTraits(Board* brd_ptr, PieceFlags::templates_t* p_templates)
+AI::MoveTraits::MoveTraits(Board* brd_ptr, pt::templates_t* p_templates)
 	: brdclass_ptr(brd_ptr),
 	pieces_templates(p_templates),
 	old_board{},
@@ -10,64 +10,75 @@ AI::MoveTraits::MoveTraits(Board* brd_ptr, PieceFlags::templates_t* p_templates)
 {}
 
 
-void AI::MoveTraits::MovePiece(
-	PieceFlags::board_grid_t& board, const sf::Vector2i old_pos, sf::Vector2i new_pos) {
+void AI::MoveTraits::MovePiece(pt::board_grid_t& gboard, pt::PieceList& gpiece_list, const sf::Vector2i old_pos, sf::Vector2i new_pos) {
 
 	// remembering old board state and then using it as an UnMove operation
 	prev_en_passant.push(en_passant_pos);
 	prev_white_king.push(white_king_pos);
 	prev_black_king.push(black_king_pos);
-	prev_brd_states.push(board);
+	prev_brd_states.push(gboard);
 
 	promote_flag = false;
 	auto
-		moved_piece(board[old_pos.y][old_pos.x]),
-		old_piece(board[new_pos.y][new_pos.x]);
+		moved_piece(gboard[old_pos.y][old_pos.x]),
+		old_piece(gboard[new_pos.y][new_pos.x]);
+	pdata_change chng{ 0, false, 0 };
 
 	// checking for castling action
-	if (moved_piece.type == PieceFlags::PieceType::KING and
-		old_piece.type == PieceFlags::PieceType::ROOK and old_piece.color == moved_piece.color) {
-		brdclass_ptr->CastleKingChange(board, old_pos, new_pos);
+	if (pt::CheckType(moved_piece, pt::BIT_KING) and
+		pt::CheckType(old_piece, pt::BIT_ROOK) and pt::CheckColor(old_piece, pt::GetBitColor(moved_piece))) {
+		CastleCase(gboard, gpiece_list, old_pos, new_pos, chng);
 	}
 	else {
-		brdclass_ptr->ChangePiecePos(board, old_pos, new_pos);
+		// if there is performed any capture, just delete subordinate piece from the piece list
+		if (!pt::CheckType(gboard[new_pos.y][new_pos.x], pt::BIT_EMPTY)) {
+			const auto cap_index = pt::GetPieceListIndex(gboard[new_pos.y][new_pos.x]);
+			chng.second = true;
+			chng.cpy2 = ((cap_index << 8) | gpiece_list[cap_index]);
+			pt::UnSetValidity(gpiece_list[cap_index]);
+		}
+	
+		brdclass_ptr->ChangePiecePos(gboard, old_pos, new_pos);
+		const auto index = pt::GetPieceListIndex(gboard[new_pos.y][new_pos.x]);
+
+		// remember data when list of piece is modyfied
+		chng.cpy1 = ((index << 8) | gpiece_list[index]);
+		gpiece_list.ChangePos(index, new_pos);
 	}
 
-	brdclass_ptr->CheckUpdateIfKingMove(board, new_pos, white_king_pos, black_king_pos);
+	brdclass_ptr->CheckUpdateIfKingMove(gboard, new_pos, white_king_pos, black_king_pos);
+	moved_piece = gboard[new_pos.y][new_pos.x];
 
-	moved_piece = board[new_pos.y][new_pos.x];
-
-	// moving a heavy piece resets current en passant pos
-	if (moved_piece.type != PieceFlags::PieceType::PAWN) {
-		SetActualEnPassant(sf::Vector2i(-1, -1));
-	}
 	// Check if the moved piece was pawn - this case is a bit tricky
-	else if (moved_piece.type == PieceFlags::PieceType::PAWN) {
-		auto* pawn_t_ptr =
-			dynamic_cast<Pawn*>((*pieces_templates)[static_cast<uint8_t>(moved_piece.color)][static_cast<uint8_t>(moved_piece.type)].get());
+	if (pt::CheckType(moved_piece, pt::BIT_PAWN)) {
+		auto* const pawn_t_ptr =
+			dynamic_cast<Pawn*>
+			((*pieces_templates)[static_cast<uint8_t>(pt::GetColor(moved_piece))][static_cast<uint8_t>(pt::GetType(moved_piece))].get());
 
 		const auto d = pawn_t_ptr->GetDirection();
 
-		SetActualEnPassant(brdclass_ptr->EnPassantCase(board, new_pos, moved_piece, d, en_passant_pos.y));
+		EnPassantCase(gboard, gpiece_list, new_pos, d, chng);
+		prev_plist_changes.push(chng);
 
-		UpdateBoard(board);
+		UpdateBoard(gboard, gpiece_list);
 
 		// check whether its new field is in the last row -
 		// it means pawn can be upgraded
 
-		if (pawn_t_ptr->CheckForUpgrade(board, new_pos)) {
+		if (pawn_t_ptr->CheckForUpgrade(gboard, new_pos)) {
 			promote_flag = true;
 		}
-
-		return;
 	}
-
-	UpdateBoard(board);
+	// moving a heavy piece resets current en passant pos
+	else {
+		SetActualEnPassant(sf::Vector2i(-1, -1));
+		prev_plist_changes.push(chng);
+		UpdateBoard(gboard, gpiece_list);
+	}
 }
 
 
-void AI::MoveTraits::UnMovePiece(
-	PieceFlags::board_grid_t& board, const sf::Vector2i new_pos) {
+void AI::MoveTraits::UnMovePiece(pt::board_grid_t& gboard, pt::PieceList& gpiece_list, const sf::Vector2i new_pos) {
 
 	// getting last traits and popping it
 	en_passant_pos = prev_en_passant.top();
@@ -80,8 +91,22 @@ void AI::MoveTraits::UnMovePiece(
 	prev_black_king.pop();
 
 	// last board state
-	board = prev_brd_states.top();
+	gboard = prev_brd_states.top();
 	prev_brd_states.pop();
+
+	// last piece list state
+	const auto chng = prev_plist_changes.top();
+	prev_plist_changes.pop();
+
+	uint8_t index = (chng.cpy1 & (0b11111 << 8)) >> 8;
+	gpiece_list[index] = chng.cpy1 & (0b11111111);
+
+	if (!chng.second) {
+		return;
+	}
+
+	index = (chng.cpy2 & (0b11111 << 8)) >> 8;
+	gpiece_list[index] = chng.cpy2 & (0b11111111);
 }
 
 
@@ -101,31 +126,93 @@ bool AI::MoveTraits::CheckPromote() noexcept {
 }
 
 
-bool AI::MoveTraits::CheckKingAttacked(PieceFlags::board_grid_t& board, const PieceFlags::PieceColor king_col) {
-	return king_col == PieceFlags::PieceColor::WHITE ?
-		board[white_king_pos.y][white_king_pos.x].occuping_color.black :
-		board[black_king_pos.y][black_king_pos.x].occuping_color.white;
-}
-
 sf::Vector2i AI::MoveTraits::GetPrevEnPassant() {
 	return en_passant_pos;
 }
 
 
-sf::Vector2i AI::MoveTraits::GetKingPos(PieceFlags::PieceColor king_col) {
-	return king_col == PieceFlags::PieceColor::WHITE ?
+sf::Vector2i AI::MoveTraits::GetKingPos(pt::PieceColor king_col) {
+	return (king_col == pt::PieceColor::WHITE) ?
 		white_king_pos : black_king_pos;
 }
 
 
-void AI::MoveTraits::UpdateBoard(PieceFlags::board_grid_t& board) {
-	for (uint8_t i = 0; i < BOARD_SIZE; i++) {
-		for (uint8_t j = 0; j < BOARD_SIZE; j++) {
-			if (board[i][j].type == PieceFlags::PieceType::EMPTY) {
-				continue;
-			}
+void AI::MoveTraits::UpdateBoard(pt::board_grid_t& gboard, const pt::PieceList& gpiece_list) {
+	for (const auto& piece : gpiece_list) {
+		if (pt::CheckUnValidity(piece)) {
+			continue;
+		}
 
-			brdclass_ptr->SetPieceOccupiedFields(board, i, j, false);
+		brdclass_ptr->SetPieceOccupiedFields(gboard, gpiece_list, pt::GetYPos(piece), pt::GetXPos(piece));
+	}
+}
+
+
+void AI::MoveTraits::EnPassantCase(
+	pt::board_grid_t& gboard, pt::PieceList& gpiece_list, const sf::Vector2i new_pos, const int8_t d, pdata_change& chng) {
+	auto& moved_piece = gboard[new_pos.y][new_pos.x];
+
+	// capturing pawn using en passant
+	if (new_pos.y - d == en_passant_pos.y and new_pos.x == en_passant_pos.x) {
+		const auto cap_index = pt::GetPieceListIndex(gboard[new_pos.y - d][new_pos.x]);
+		chng.second = true;
+		chng.cpy2 = ((cap_index << 8) | gpiece_list[cap_index]);
+		pt::UnSetValidity(gpiece_list[cap_index]);
+		gboard[new_pos.y - d][new_pos.x] &= (0b11111 << 7);
+	}
+	else { // setting en passant position
+
+		const bool is_double_field_move =
+			(pt::CheckColor(moved_piece, pt::BIT_WHITE) and new_pos.y == 4) or
+			(pt::CheckColor(moved_piece, pt::BIT_BLACK) and new_pos.y == 3);
+
+		if (is_double_field_move and !pt::CheckMoveTag(moved_piece)) {
+			SetActualEnPassant(new_pos);
+			return;
 		}
 	}
+
+	pt::SetMoveTag(moved_piece);
+	SetActualEnPassant({ -1, -1 });
+}
+
+
+void AI::MoveTraits::CastleCase(
+	pt::board_grid_t& gboard, pt::PieceList& gpiece_list, const sf::Vector2i old_pos, sf::Vector2i new_pos, pdata_change& chng) {
+
+	auto rook_index = pt::GetPieceListIndex(gboard[new_pos.y][new_pos.x]),
+		king_index = pt::GetPieceListIndex(gboard[old_pos.y][old_pos.x]);
+
+	chng.second = true;
+	chng.cpy2 = ((rook_index << 8) | gpiece_list[rook_index]);
+	chng.cpy1 = ((king_index << 8) | gpiece_list[king_index]);
+
+	if (new_pos.x == 0) {
+		gpiece_list.ChangePos(rook_index, 3, new_pos.y);
+
+		gboard[new_pos.y][new_pos.x] = 0;
+
+		new_pos = sf::Vector2i(1, new_pos.y);
+		gboard[new_pos.y][new_pos.x] = gboard[old_pos.y][old_pos.x];
+
+		gboard[new_pos.y][3] =
+			pt::GetBitColor(gboard[new_pos.y][new_pos.x]) | pt::BIT_ROOK;
+	}
+	else {
+		gpiece_list.ChangePos(rook_index, 5, new_pos.y);
+
+		gboard[new_pos.y][new_pos.x] = 0;
+
+		new_pos = sf::Vector2i(BOARD_SIZE - 2, new_pos.y);
+		gboard[new_pos.y][new_pos.x] = gboard[old_pos.y][old_pos.x];
+
+		gboard[new_pos.y][5] =
+			pt::GetBitColor(gboard[new_pos.y][new_pos.x]) | pt::BIT_ROOK;
+	}
+
+	brdclass_ptr->ChangePiecePos(gboard, old_pos, new_pos);
+	pt::SetMoveTag(gboard[new_pos.y][new_pos.x]);
+
+	king_index = pt::GetPieceListIndex(gboard[new_pos.y][new_pos.x]);
+	gpiece_list.ChangePos(king_index, new_pos);
 }

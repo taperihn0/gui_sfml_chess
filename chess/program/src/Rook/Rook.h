@@ -7,17 +7,23 @@ class Rook : virtual public Piece {
 public:
 	Rook() = default;
 	Rook(const std::string& texture_path, Board* board_ptr,
-		const uint16_t& size, bool is_white_flag);
+		uint16_t size, bool is_white_flag);
 
 	// return avaible fields for rook - 
 	// kind of straight lines
-	const std::vector<sf::Vector2i>& GetActiveFields(
-		const PieceFlags::board_grid_t& pieces_indicator,
-		const sf::Vector2i& pos, bool consider_check = true, bool clear = true) override;
+	const std::vector<sf::Vector2i>& 
+	GetActiveFields(
+		const pt::board_grid_t& gboard,
+		sf::Vector2i pos, sf::Vector2i, sf::Vector2i king_pos,
+		const pt::PieceList& gpiece_list,
+		bool consider_check = true, bool clear = true) override;
 private:
+
 	// go through straight line of rook's active fields
-	void ProcessLine(const PieceFlags::board_grid_t& pieces_indicator,
-		sf::Vector2i pos, const sf::Vector2i& direction) noexcept;
+	void ProcessLine(
+		const pt::board_grid_t& gboard,
+		const pt::PieceList& gpiece_list,
+		sf::Vector2i pos, sf::Vector2i direction) noexcept;
 	
 	struct dim_directions {
 		int8_t d_x, d_y;

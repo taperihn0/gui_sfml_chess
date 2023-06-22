@@ -1,12 +1,12 @@
 #pragma once
 
-#include <SFML\Graphics.hpp>
-
-#include "..\Indicator.h"
+#include "../PieceData.h"
 #include "MoveTraits.h"
 
 #include <vector>
 #include <chrono>
+
+#define PERFT_RES unsigned long long
 
 class Board;
 
@@ -15,11 +15,12 @@ namespace AI {
 	public:
 		using square_table_t = std::array<std::array<int8_t, BOARD_SIZE>, BOARD_SIZE>;
 
-		Engine(PieceFlags::board_grid_t& board_ref, Board* brd_ptr, PieceFlags::templates_t* p_templates);
+		Engine(
+			pt::board_grid_t& board_ref, pt::PieceList& plist_ref, Board* brd_ptr, pt::templates_t* p_templates);
 
-		unsigned long long
+		PERFT_RES
 		GenerateBestMove(
-			const PieceFlags::av_moves_board_t& m_board, uint8_t depth, bool is_white_turn, 
+			const pt::av_moves_board_t& m_board, uint8_t depth, bool is_white_turn, 
 			const sf::Vector2i en_passant_pos, const sf::Vector2i white_king_pos, const sf::Vector2i black_king_pos);
 
 		bool GetPromotePiece() noexcept;
@@ -28,16 +29,20 @@ namespace AI {
 
 		bool CompEvals(int16_t ev1, int16_t ev2, bool is_white_turn) noexcept;
 
-		unsigned long long SearchEvalMove(PieceFlags::board_grid_t& board, uint8_t depth, bool is_white_turn);
+		PERFT_RES 
+		SearchEvalMove(
+			pt::board_grid_t& board, pt::PieceList& plist, uint8_t depth, bool is_white_turn);
 
-		int16_t Eval(PieceFlags::board_grid_t& board);
+		int16_t Eval(pt::board_grid_t& board, const pt::PieceList& plist);
 
-		void GenerateLegalMoves(std::vector<piece_pos_change>& legal_moves, PieceFlags::board_grid_t& board, bool is_white_turn);
+		void GenerateLegalMoves(
+			std::vector<piece_pos_change>& legal_moves, pt::board_grid_t& board, const pt::PieceList& plist, bool is_white_turn);
 
-		const PieceFlags::board_grid_t& rboard;
+		const pt::board_grid_t& rboard;
+		const pt::PieceList& rpiece_list;
 		Board* const brdclass_ptr;
 
-		const PieceFlags::templates_t* const pieces_templates;
+		const pt::templates_t* const pieces_templates;
 
 		const std::array<uint8_t, 7> weights;
 		std::array<square_table_t, 7> square_table;

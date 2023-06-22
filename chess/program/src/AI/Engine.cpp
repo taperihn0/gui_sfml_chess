@@ -2,16 +2,21 @@
 #include "..\Board\Board.h"
 
 #ifdef PR_PERFT
-#define MOVE_LOG(pos_change, m_res) std::cout << static_cast<char>('a' + pos_change.old_pos.x) << BOARD_SIZE - pos_change.old_pos.y \
-										<< static_cast<char>('a' + pos_change.new_pos.x) << BOARD_SIZE - pos_change.new_pos.y \
-										<< ' ' << m_res << '\n';
+#define MOVE_LOG(pos_change, m_res) MoveLog(pos_change, m_res)
 #else
 #define MOVE_LOG()
 #endif
 
+inline void MoveLog(AI::piece_pos_change pchng, PERFT_RES m_res) {
+	std::cout << static_cast<char>('a' + pchng.old_pos.x) << BOARD_SIZE - pchng.old_pos.y 
+		<< static_cast<char>('a' + pchng.new_pos.x) << BOARD_SIZE - pchng.new_pos.y << ' ' << m_res << '\n';
+}
 
-AI::Engine::Engine(PieceFlags::board_grid_t& board_ref, Board* brd_ptr, PieceFlags::templates_t* p_templates)
+
+AI::Engine::Engine(
+	pt::board_grid_t& board_ref, pt::PieceList& plist_ref, Board* brd_ptr, pt::templates_t* p_templates)
 	: rboard(board_ref),
+	rpiece_list(plist_ref),
 	brdclass_ptr(brd_ptr),
 	pieces_templates(p_templates),
 	weights{ 0, 1, 3, 3, 5, 90 },
@@ -21,49 +26,51 @@ AI::Engine::Engine(PieceFlags::board_grid_t& board_ref, Board* brd_ptr, PieceFla
 }
 
 
-unsigned long long 
+PERFT_RES 
 AI::Engine::GenerateBestMove(
-	const PieceFlags::av_moves_board_t& m_board, uint8_t depth, bool is_white_turn, 
+	const pt::av_moves_board_t& m_board, uint8_t depth, bool is_white_turn,
 	const sf::Vector2i en_passant_pos, const sf::Vector2i white_king_pos, const sf::Vector2i black_king_pos) {
 	
 	const auto start = std::chrono::high_resolution_clock::now();
 
-	auto turn_col = static_cast<PieceFlags::PieceColor>(2 - is_white_turn);
+	bool turn_col(1 - is_white_turn);
 	std::vector<piece_pos_change> legal_moves;
 
 	move_hlp.SetActualEnPassant(en_passant_pos);
 	move_hlp.SetKingsPos(white_king_pos, black_king_pos);
+	
+	sf::Vector2i old_pos_tmp;
+	for (uint8_t index = 0; index < m_board.size(); index++) {
+		if (pt::CheckUnValidity(rpiece_list[index]) or !pt::CheckPDataColor(rpiece_list[index], turn_col)) {
+			continue;
+		}
 
-	unsigned long long res = 0;
-
-	for (uint8_t i = 0; i < BOARD_SIZE; i++) {
-		for (uint8_t j = 0; j < BOARD_SIZE; j++) {
-			if (turn_col != rboard[i][j].color) {
-				continue;
-			}
-
-			for (const auto& move : m_board[i][j]) {
-				legal_moves.emplace_back(sf::Vector2i{ j, i }, move);
-			}
+		for (const auto& move : m_board[index]) {
+			old_pos_tmp = sf::Vector2i(
+				pt::GetXPos(rpiece_list[index]),
+				pt::GetYPos(rpiece_list[index]) );
+			legal_moves.emplace_back(old_pos_tmp, move);
 		}
 	}
 
-	PieceFlags::board_grid_t board_cpy = rboard;
+	pt::board_grid_t board_cpy(rboard);
+	pt::PieceList plist_cpy(rpiece_list);
+	PERFT_RES res = 0;
 
 	for (const auto& pos_change : legal_moves) {
-		move_hlp.MovePiece(board_cpy, pos_change.old_pos, pos_change.new_pos);
+		move_hlp.MovePiece(board_cpy, plist_cpy, pos_change.old_pos, pos_change.new_pos);
 
-		const auto m_res = SearchEvalMove(board_cpy, depth - 1, !is_white_turn);
+		const auto m_res = SearchEvalMove(board_cpy, plist_cpy, depth - 1, !is_white_turn);
 
 		MOVE_LOG(pos_change, m_res);
 
 		res += m_res;
-		move_hlp.UnMovePiece(board_cpy, pos_change.new_pos);
+		move_hlp.UnMovePiece(board_cpy, plist_cpy, pos_change.new_pos);
 	}
 
 	const std::chrono::duration<float> stop = std::chrono::high_resolution_clock::now() - start;
 	std::cout << "Time: " << stop.count() * 1000.f << "ms" << std::endl
-		<< "Depth " << depth << ": " << res << " nodes" << std::endl;
+		<< "Depth " << static_cast<int>(depth) << ": " << res << " nodes" << std::endl;
 
 	return res;
 }
@@ -150,22 +157,24 @@ inline bool AI::Engine::CompEvals(int16_t ev1, int16_t ev2, bool is_white_turn) 
 }
 
 
-unsigned long long AI::Engine::SearchEvalMove(PieceFlags::board_grid_t& board, uint8_t depth, bool is_white_turn) {
+PERFT_RES 
+AI::Engine::SearchEvalMove(
+	pt::board_grid_t& board, pt::PieceList& plist, uint8_t depth, bool is_white_turn) {
 	if (!depth) {
 		return 1;
 	}
 	
 	std::vector<piece_pos_change> legal_moves;
-	GenerateLegalMoves(legal_moves, board, is_white_turn);
+	GenerateLegalMoves(legal_moves, board, plist, is_white_turn);
 
-	unsigned long long res = 0;
+	PERFT_RES res = 0;
 
 	for (const auto& pos_change : legal_moves) {
-		move_hlp.MovePiece(board, pos_change.old_pos, pos_change.new_pos);
+		move_hlp.MovePiece(board, plist, pos_change.old_pos, pos_change.new_pos);
 
-		res += SearchEvalMove(board, depth - 1, !is_white_turn);
+		res += SearchEvalMove(board, plist, depth - 1, !is_white_turn);
 
-		move_hlp.UnMovePiece(board, pos_change.new_pos);
+		move_hlp.UnMovePiece(board, plist, pos_change.new_pos);
 	}
 
 	
@@ -173,52 +182,50 @@ unsigned long long AI::Engine::SearchEvalMove(PieceFlags::board_grid_t& board, u
 }
 
 
-int16_t AI::Engine::Eval(PieceFlags::board_grid_t& board) {
+int16_t AI::Engine::Eval(pt::board_grid_t& board, const pt::PieceList& plist) {
 	int16_t eval(0);
 
-	for (uint8_t i = 0; i < BOARD_SIZE; i++) {
-		for (uint8_t j = 0; j < BOARD_SIZE; j++) {
-			if (board[i][j].color == PieceFlags::PieceColor::WHITE) {
-				eval += 20 * weights[static_cast<uint8_t>(board[i][j].type)];
-				eval += square_table[static_cast<uint8_t>(board[i][j].type)][i][j];
-			}
-			else {
-				eval -= 20 * weights[static_cast<uint8_t>(board[i][j].type)];
-				eval -= square_table[static_cast<uint8_t>(board[i][j].type)][i][j];
-			}
+	/*pt::PieceType type_tmp;
+	for (const auto& pdata : plist) {
+		if (pt::CheckUnValidity(pdata)) {
+			continue;
 		}
-	}
+		else if (pt::CheckColor(pdata, pt::BIT_WHITE)) { // wrong function
+			type_tmp = pt::GetType(board[pt::GetYPos(pdata)][pt::GetXPos(pdata)]);
+			eval += 20 * weights[static_cast<uint8_t>(type_tmp)];
+			eval += square_table[static_cast<uint8_t>(board[i][j].type)][i][j];
+		}
+		else {
+			type_tmp = pt::GetType(board[pt::GetYPos(pdata)][pt::GetXPos(pdata)]);
+			eval -= 20 * weights[static_cast<uint8_t>(type_tmp)];
+			eval -= square_table[static_cast<uint8_t>(board[i][j].type)][i][j];
+		}
+	}*/
 
 	return eval;
 }
 
 
-void AI::Engine::GenerateLegalMoves(std::vector<piece_pos_change>& legal_moves, PieceFlags::board_grid_t& board, bool is_white_turn) {
-	uint8_t turn_col(2 - is_white_turn);
-	PieceFlags::Indicator piece;
+void AI::Engine::GenerateLegalMoves(
+	std::vector<piece_pos_change>& legal_moves, pt::board_grid_t& board, const pt::PieceList& plist, bool is_white_turn) {
+	const bool turn_col(1 - is_white_turn);
+	pt::field_t field;
+	sf::Vector2i pos;
 
-	for (uint8_t i = 0; i < BOARD_SIZE; i++) {
-		for (uint8_t j = 0; j < BOARD_SIZE; j++) {
-			piece = board[i][j];
+	for (const auto& pdata : plist) {
+		if (pt::CheckUnValidity(pdata) or !pt::CheckPDataColor(pdata, turn_col)) {
+			continue;
+		}
+		
+		pos = sf::Vector2i(pt::GetXPos(pdata), pt::GetYPos(pdata));
+		field = board[pos.y][pos.x];
 
-			if (piece.type == PieceFlags::PieceType::EMPTY or
-				piece.color != static_cast<PieceFlags::PieceColor>(turn_col)) {
-				continue;
-			}
+		auto&& l_moves = 
+			(*pieces_templates)[static_cast<uint8_t>(pt::GetColor(field))][static_cast<uint8_t>(pt::GetType(field))]->
+			GetActiveFields(board, pos, move_hlp.GetPrevEnPassant(), move_hlp.GetKingPos(pt::GetColor(field)), plist);
 
-			(*pieces_templates)[static_cast<uint8_t>(piece.color)][static_cast<uint8_t>(piece.type)]->
-				brd_ep = move_hlp.GetPrevEnPassant();
-
-			(*pieces_templates)[static_cast<uint8_t>(piece.color)][static_cast<uint8_t>(piece.type)]->
-				brd_king_pos = move_hlp.GetKingPos(piece.color);
-
-			auto l_moves(
-				(*pieces_templates)[static_cast<uint8_t>(piece.color)][static_cast<uint8_t>(piece.type)]->
-				GetActiveFields(board, sf::Vector2i(j, i)));
-
-			for (const auto& move : l_moves) {
-				legal_moves.emplace_back(sf::Vector2i(j, i), move);
-			}
+		for (const auto& move : l_moves) {
+			legal_moves.emplace_back(pos, move);
 		}
 	}
 }

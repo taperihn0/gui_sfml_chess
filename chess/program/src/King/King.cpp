@@ -3,19 +3,17 @@
 
 // manual definition of base class member template due to linking errors
 template<typename T>
-bool Piece::LoopGenerateOccupied(PieceFlags::board_grid_t&& board, T&& break_condtn) {
-	for (uint8_t i = 0; i < BOARD_SIZE; i++) {
-		for (uint8_t j = 0; j < BOARD_SIZE; j++) {
-			if (board[i][j].type == PieceFlags::PieceType::EMPTY or
-				board[i][j].color == piece_color) {
-				continue;
-			}
+bool Piece::LoopGenerateOccupied(pt::board_grid_t&& gboard, const pt::PieceList& gpiece_list, T&& break_condtn) {
+	for (const auto& piece : gpiece_list) {
+		if (pt::CheckPieceColor(piece, piece_color) or pt::CheckUnValidity(piece)) {
+			continue;
+		}
 
-			brdclass_ptr->SetPieceOccupiedFields(board, i, j, false);
+		brdclass_ptr->
+			SetPieceOccupiedFields(gboard, gpiece_list, pt::GetYPos(piece), pt::GetXPos(piece));
 
-			if (break_condtn(board)) {
-				return false;
-			}
+		if (break_condtn(gboard)) {
+			return false;
 		}
 	}
 
@@ -24,61 +22,68 @@ bool Piece::LoopGenerateOccupied(PieceFlags::board_grid_t&& board, T&& break_con
 
 
 King::King(const std::string& texture_path, Board* board_ptr,
-	const uint16_t& size, bool is_white_flag)
-	: Piece(texture_path, board_ptr, size, PieceFlags::PieceColor(2 - is_white_flag)),
+	uint16_t size, bool is_white_flag)
+	: Piece(texture_path, board_ptr, size, static_cast<pt::PieceColor>(1 - is_white_flag)),
 	directions{ { {-1, -1}, {0, -1}, {1, -1}, {1, 0}, {1, 1}, {0, 1}, {-1, 1}, {-1, 0} } }
 {}
 
 
-const std::vector<sf::Vector2i>& 
+const std::vector<sf::Vector2i>&
 King::GetActiveFields(
-	const PieceFlags::board_grid_t& pieces_indicator,
-	const sf::Vector2i& pos, bool consider_check, bool clear) {
+	const pt::board_grid_t& gboard,
+	sf::Vector2i pos, sf::Vector2i, sf::Vector2i,
+	const pt::PieceList& gpiece_list,
+	bool consider_check, bool clear) {
+
 	if (clear) {
 		avaible_fields.clear();
 	}
 
-	is_check = consider_check;
 	sf::Vector2i new_pos;
+	is_check = consider_check;
 
 	for (const auto& direct : directions) {
 		new_pos = pos + sf::Vector2i(direct.d_x, direct.d_y);
 	
-		if (CheckFieldCheckSafeValid(pieces_indicator, pos, new_pos)) {
+		if (CheckFieldCheckSafeValid(gboard, gpiece_list, pos, new_pos)) {
 			avaible_fields.push_back(new_pos);
 		}
 	}
 
-	CheckAppendCastleMove(pieces_indicator, pos);
+	CheckAppendCastleMove(gboard, pos);
 	return avaible_fields;
 }
 
 
 void King::MarkOccupiedFields(
-	PieceFlags::board_grid_t& board,
-	const sf::Vector2i& pos, bool consider_check) {
-	is_check = consider_check;
+	pt::board_grid_t& gboard,
+	sf::Vector2i, sf::Vector2i,
+	const pt::PieceList& gpiece_list,
+	sf::Vector2i pos) {
+
 	sf::Vector2i new_pos;
+	is_check = false;
 
 	for (const auto& direct : directions) {
 		new_pos = pos + sf::Vector2i(direct.d_x, direct.d_y);
 
-		if (CheckFieldCheckSafeValid(board, pos, new_pos)) {
-			MarkSingleOccupied(board[new_pos.y][new_pos.x]);
+		if (CheckFieldCheckSafeValid(gboard, gpiece_list, pos, new_pos)) {
+			MarkSingleOccupied(gboard[new_pos.y][new_pos.x]);
 		}
 	}
 }
 
 
 bool King::CheckFieldCheckSafeValid(
-	const PieceFlags::board_grid_t& pieces_indicator,
+	const pt::board_grid_t& gboard,
+	const pt::PieceList& gpiece_list,
 	sf::Vector2i old_pos, sf::Vector2i new_pos) {
 
 	// check if field is valid and can be captured
-	bool is_valid = 
+	const bool is_valid = 
 		Board::isValidField(new_pos) and
-		(pieces_indicator[new_pos.y][new_pos.x].type == PieceFlags::PieceType::EMPTY or
-			pieces_indicator[new_pos.y][new_pos.x].color != piece_color);
+		(pt::CheckType(gboard[new_pos.y][new_pos.x], pt::BIT_EMPTY) or
+			!pt::CheckColor(gboard[new_pos.y][new_pos.x], pt::CastToBitColor(piece_color)));
 
 	if (!is_valid) {
 		return false;
@@ -87,46 +92,40 @@ bool King::CheckFieldCheckSafeValid(
 	}
 
 	// prepare copy of current board and then generate all the occupied fields by enemy pieces
-	PieceFlags::board_grid_t pieces_indicator_cpy = pieces_indicator;
+	pt::board_grid_t gboard_cpy = gboard;
 
-	brdclass_ptr->ZeroEntireBoardOccuperColor(pieces_indicator_cpy);
-	brdclass_ptr->ChangePiecePos(pieces_indicator_cpy, old_pos, new_pos);
+	brdclass_ptr->ZeroEntireBoardOccuperColor(gboard_cpy);
+	brdclass_ptr->ChangePiecePos(gboard_cpy, old_pos, new_pos);
 
-	/*return LoopGenerateOccupied(std::move(pieces_indicator_cpy), [this, new_pos](const PieceFlags::board_grid_t& board) {
-		if (piece_color == PieceFlags::PieceColor::WHITE and board[new_pos.y][new_pos.x].occuping_color.black) {
-			return true;
-		}
-		else if (piece_color == PieceFlags::PieceColor::BLACK and board[new_pos.y][new_pos.x].occuping_color.white) {
-			return true;
-		}
-		return false;
-	});*/
-
-	return LoopGenerateOccupied(std::move(pieces_indicator_cpy), [this, new_pos](const PieceFlags::board_grid_t& board) {
-		return brdclass_ptr->CheckKingAttacked(board, piece_color, new_pos);
+	return LoopGenerateOccupied(std::move(gboard_cpy), gpiece_list, 
+		[this, new_pos](const pt::board_grid_t& gboard) {
+		return brdclass_ptr->CheckKingAttacked(gboard, piece_color, new_pos);
 	});
 }
 
 
 void King::CheckAppendCastleMove(
-	const PieceFlags::board_grid_t& pieces_indicator,
+	const pt::board_grid_t& gboard,
 	sf::Vector2i pos) {
 
-	if (brdclass_ptr->CheckKingAttacked(pieces_indicator, piece_color, pos) or
-		!pieces_indicator[pos.y][pos.x].CheckMove(0)) {
+	if (brdclass_ptr->CheckKingAttacked(gboard, piece_color, pos) or pt::CheckMoveTag(gboard[pos.y][pos.x])) {
 		return;
 	}
 
 	// check one side
-	auto rook_field = pieces_indicator[pos.y][0];
-	bool castle_flag = true;
+	auto rook_field = gboard[pos.y][0];
+	bool castle_flag(true);
 
-	if (rook_field.type == PieceFlags::PieceType::ROOK and
-		rook_field.color == piece_color and rook_field.CheckMove(0)) {
+	// condition checker
+	auto con_check = [piece_col = this->piece_color](auto rook_field) {
+		return pt::CheckType(rook_field, pt::BIT_ROOK) and 
+			pt::CheckColor(rook_field, pt::CastToBitColor(piece_col)) and !pt::CheckMoveTag(rook_field);
+	};
 
+	if (con_check(rook_field)) {
 		for (uint8_t x = pos.x - 1; x > 0; x--) {
-			if (pieces_indicator[pos.y][x].type != PieceFlags::PieceType::EMPTY or
-				CheckFieldOccuped(pieces_indicator[pos.y][x])) {
+			if (!pt::CheckType(gboard[pos.y][x], pt::BIT_EMPTY) or
+				CheckFieldOccuped(gboard[pos.y][x])) {
 				castle_flag = false;
 				break;
 			}
@@ -138,14 +137,12 @@ void King::CheckAppendCastleMove(
 	}
 
 	// check another side
-	rook_field = pieces_indicator[pos.y][BOARD_SIZE - 1];
+	rook_field = gboard[pos.y][BOARD_SIZE - 1];
 
-	if (rook_field.type == PieceFlags::PieceType::ROOK and
-		rook_field.color == piece_color and rook_field.CheckMove(0)) {
-
+	if (con_check(rook_field)) {
 		for (uint8_t x = pos.x + 1; x < BOARD_SIZE - 1; x++) {
-			if (pieces_indicator[pos.y][x].type != PieceFlags::PieceType::EMPTY or
-				CheckFieldOccuped(pieces_indicator[pos.y][x])) {
+			if (!pt::CheckType(gboard[pos.y][x], pt::BIT_EMPTY) or
+				CheckFieldOccuped(gboard[pos.y][x])) {
 				return;
 			}
 		}
@@ -155,7 +152,7 @@ void King::CheckAppendCastleMove(
 }
 
 
-bool King::CheckFieldOccuped(PieceFlags::Indicator field) {
-	return piece_color == PieceFlags::PieceColor::WHITE ?
-		field.occuping_color.black : field.occuping_color.white;
+inline bool King::CheckFieldOccuped(pt::field_t field) {
+	return (piece_color == pt::PieceColor::WHITE) ?
+		pt::CheckOccuper(field, pt::BIT_OCC_BLACK) : pt::CheckOccuper(field, pt::BIT_OCC_WHITE);
 }

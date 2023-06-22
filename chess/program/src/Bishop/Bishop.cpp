@@ -2,25 +2,30 @@
 #include "..\Board\Board.h"
 
 Bishop::Bishop(const std::string& texture_path, Board* board_ptr,
-	const uint16_t& size, bool is_white_flag)
-	: Piece(texture_path, board_ptr, size, PieceFlags::PieceColor(2 - is_white_flag))
+	uint16_t size, bool is_white_flag)
+	: Piece(texture_path, board_ptr, size, static_cast<pt::PieceColor>(1 - is_white_flag))
 {}
 
 
-const std::vector<sf::Vector2i>& Bishop::GetActiveFields(
-	const PieceFlags::board_grid_t& pieces_indicator,
-	const sf::Vector2i& pos, bool consider_check, bool clear) {
+const std::vector<sf::Vector2i>& 
+Bishop::GetActiveFields(
+	const pt::board_grid_t& gboard,
+	sf::Vector2i pos, sf::Vector2i, sf::Vector2i king_pos,
+	const pt::PieceList& gpiece_list,
+	bool consider_check, bool clear) {
+
 	if (clear) {
 		avaible_fields.clear();
 	}
 
 	is_check = consider_check;
+	brd_king_pos = king_pos;
 
 	// go through diagonals and break when another piece
 	// appear or when end of board
 	for (const auto& d_y : { -1, 1 }) {
 		for (const auto& d_x : { -1, 1 }) {
-			ProcessDiagonal(pieces_indicator, pos, sf::Vector2i(d_x, d_y));
+			ProcessDiagonal(gboard, gpiece_list, pos, sf::Vector2i(d_x, d_y));
 		}
 	}
 
@@ -29,20 +34,22 @@ const std::vector<sf::Vector2i>& Bishop::GetActiveFields(
 
 
 void Bishop::ProcessDiagonal(
-	const PieceFlags::board_grid_t& pieces_indicator,
+	const pt::board_grid_t& gboard,
+	const pt::PieceList& gpiece_list,
 	sf::Vector2i pos, const sf::Vector2i& direction) noexcept {
 	
 	sf::Vector2i temp_vec(pos + direction);
 
-	while (CheckFieldFreeValid(pieces_indicator, temp_vec)) {
-		if (!is_check or CheckCheckSafe(pieces_indicator, pos, temp_vec)) {
+	while (CheckFieldFreeValid(gboard, temp_vec)) {
+		if (!is_check or CheckCheckSafe(gboard, gpiece_list, pos, temp_vec)) {
 			avaible_fields.push_back(temp_vec);
 		}
+
 		temp_vec += direction;
 	}
 
-	if (CheckFieldOccupied(pieces_indicator, temp_vec, piece_color) and
-		(!is_check or CheckCheckSafe(pieces_indicator, pos, temp_vec))) {
+	if (CheckFieldOccupied(gboard, temp_vec, piece_color) and
+		(!is_check or CheckCheckSafe(gboard, gpiece_list, pos, temp_vec))) {
 		avaible_fields.push_back(temp_vec);
 	}
 }
