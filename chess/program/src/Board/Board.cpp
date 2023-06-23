@@ -27,7 +27,6 @@ Board::Board(const uint16_t& window_size)
 	is_white_turn(true),
 	possible_moves(0),
 	is_turn_sound(false),
-	engine(board, piece_list, this, &pieces_templates),
 	list_of_window_pieces{
 			pt::PieceType::QUEEN,
 			pt::PieceType::ROOK,
@@ -72,6 +71,7 @@ void Board::PrepareBoard() {
 		LocatePieceOnSurface(pt::GetYPos(piece), pt::GetXPos(piece));
 	}
 
+	is_white_turn = true;
 	render_board.draw(sf::Sprite(plain_board.getTexture()));
 }
 
@@ -98,13 +98,6 @@ void Board::ProcessPressedMouse(const sf::Vector2i& mouse_pos) {
 		(mouse_pos.x - 1) / FIELD_SIZE, 
 		(mouse_pos.y - 1) / FIELD_SIZE );
 
-	///// TEST //////
-
-	for (int i = 0; i < 4; i++) {
-		int depth = 4;
-		engine.GenerateBestMove(cache, depth, true, en_passant_pos, white_king_pos, black_king_pos);
-	}
-
 	// if whites' turn, then focus only white pieces
 	// else blacks' turn.
 	// but when any piece is already focused,
@@ -112,7 +105,6 @@ void Board::ProcessPressedMouse(const sf::Vector2i& mouse_pos) {
 
 	if (is_pawn_upgrade_window) {
 		PickPieceOnWindow(field_pos);
-		// it should be bot's response here
 		return;
 	}
 	else if (!isValidField(field_pos)) {
@@ -138,20 +130,6 @@ void Board::ProcessPressedMouse(const sf::Vector2i& mouse_pos) {
 	else if (is_focus_flag and move_field.is_found) {
 		MovePiece(curr_focused_pos, move_field.active_clicked);
 		UnfocusPieceField(curr_focused_pos);
-
-		if (is_pawn_upgrade_window) {
-			return;
-		}
-
-		// bot's response
-		/*const auto bot_move(engine.GenerateBestMove(cache, 1, false, en_passant_pos, white_king_pos, black_king_pos));
-		
-		if (bot_move.new_pos.x == -1) {
-			possible_moves = 0;
-			return;
-		}
-
-		MovePiece(bot_move.old_pos, bot_move.new_pos, true);*/
 	}
 }
 

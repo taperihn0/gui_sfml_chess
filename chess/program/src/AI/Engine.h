@@ -1,5 +1,11 @@
 #pragma once
 
+/* 
+ Resigned of developing chess game engine, due to high level of irritation and no
+ efficiency gains for 2 weeks of programming.
+*/
+
+
 #include "../PieceData.h"
 #include "MoveTraits.h"
 

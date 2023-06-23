@@ -240,7 +240,7 @@ void Menu::PrepareText() {
 	end_text[2].setPosition(WINDOW_WIDTH / 2 - 10, WINDOW_HEIGHT - 160);
 
 	end_text[3].setFont(italic_f);
-	end_text[3].setString("1       :       0");
+	end_text[3].setString("-       -       -");
 	end_text[3].setFillColor(sf::Color::White);
 	end_text[3].setCharacterSize(15);
 	end_text[3].setOutlineThickness(2);

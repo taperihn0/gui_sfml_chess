@@ -10,8 +10,6 @@
 #include "..\Queen\Queen.h"
 #include "..\King\King.h"
 
-#include "..\AI\Engine.h"
-
 #include <iostream>
 #include <stdexcept>
 #include <cstdint>
@@ -204,6 +202,4 @@ private:
 	std::array<std::unique_ptr<sf::SoundBuffer>, 6> sbuffers;
 	sf::Sound turn_sound;
 	bool is_turn_sound;
-
-	AI::Engine engine;
 };
